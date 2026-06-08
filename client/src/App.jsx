@@ -9,6 +9,7 @@ import Dashboard from './pages/admin/Dashboard';
 import Orders from './pages/admin/Orders';
 import OrderDetail from './pages/admin/OrderDetail';
 import Laporan from './pages/admin/Laporan';
+import Pengeluaran from './pages/admin/Pengeluaran';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/admin/orders" element={<Orders />} />
         <Route path="/admin/orders/:id" element={<OrderDetail />} />
         <Route path="/admin/laporan" element={<Laporan />} />
+        <Route path="/admin/pengeluaran" element={<Pengeluaran />} />
       </Route>
     </Routes>
   );

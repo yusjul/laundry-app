@@ -49,6 +49,18 @@ export async function initDB() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS expenses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'Lainnya',
+      amount REAL NOT NULL,
+      date TEXT NOT NULL,
+      notes TEXT DEFAULT '',
+      created_at TEXT DEFAULT (datetime('now', 'localtime'))
+    )
+  `);
+
   saveDB();
   return db;
 }
