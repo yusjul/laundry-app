@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Pencil, Trash2, X, Check } from 'lucide-react';
+import { Pencil, Trash2, X, Check, MessageCircle } from 'lucide-react';
 
 const statusFlow = ['pending', 'diambil', 'dicuci', 'disetrika', 'selesai', 'diantar'];
 const statusLabels = {
@@ -74,13 +74,13 @@ export default function OrderDetail() {
     <div>
       <Link to="/admin/orders" className="text-xs uppercase tracking-widest text-ink/50 hover:text-ink transition-colors">&larr; Kembali</Link>
 
-      <div className="bg-white p-8 mt-6">
-        <div className="flex justify-between items-start mb-8">
+      <div className="bg-white p-4 md:p-8 mt-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
           <div>
-            <h1 className="font-display text-3xl mb-1">{order.order_no}</h1>
+            <h1 className="font-display text-2xl md:text-3xl mb-1">{order.order_no}</h1>
             <p className="text-ink/40 text-xs uppercase tracking-wider">{order.created_at}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs uppercase tracking-wider text-ink/50 bg-ink/5 px-4 py-2">{statusLabels[order.status]}</span>
             {!editing && (
               <>
@@ -106,7 +106,7 @@ export default function OrderDetail() {
         </div>
 
         {!editing ? (
-          <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-10 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 mb-10 text-sm">
             {[
               ['Nama', order.customer_name],
               ['No HP', order.phone],
@@ -117,14 +117,14 @@ export default function OrderDetail() {
               ...(order.pickup ? [['Antar Jemput', 'Ya']] : []),
               ...(order.notes ? [['Catatan', order.notes]] : []),
             ].map(([label, value]) => (
-              <div key={label} className={label === 'Alamat' || label === 'Catatan' ? 'col-span-2' : ''}>
+              <div key={label} className={`${label === 'Alamat' || label === 'Catatan' ? 'md:col-span-2' : ''} ${label === 'Total' ? 'md:col-span-2' : ''}`}>
                 <p className="text-ink/40 text-xs uppercase tracking-wider mb-1">{label}</p>
                 <p className="font-medium">{value}</p>
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-x-8 gap-y-4 mb-10 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-10 text-sm">
             <div>
               <label className="text-ink/40 text-xs uppercase tracking-wider mb-1 block">Nama *</label>
               <input name="customer_name" value={form.customer_name} onChange={handleEditChange} className="w-full border-0 border-b-2 border-ink/10 px-0 py-2 text-ink focus:border-coral focus:ring-0 text-sm" />
@@ -133,7 +133,7 @@ export default function OrderDetail() {
               <label className="text-ink/40 text-xs uppercase tracking-wider mb-1 block">No HP *</label>
               <input name="phone" value={form.phone} onChange={handleEditChange} className="w-full border-0 border-b-2 border-ink/10 px-0 py-2 text-ink focus:border-coral focus:ring-0 text-sm" />
             </div>
-            <div className="col-span-2">
+            <div className="md:col-span-2">
               <label className="text-ink/40 text-xs uppercase tracking-wider mb-1 block">Alamat</label>
               <textarea name="address" value={form.address} onChange={handleEditChange} rows={2} className="w-full border-0 border-b-2 border-ink/10 px-0 py-2 text-ink focus:border-coral focus:ring-0 text-sm" />
             </div>
@@ -149,13 +149,13 @@ export default function OrderDetail() {
                 <input type="number" name="weight" value={form.weight} onChange={handleEditChange} step="0.5" min="0" className="w-full border-0 border-b-2 border-ink/10 px-0 py-2 text-ink focus:border-coral focus:ring-0 text-sm" />
               </div>
             )}
-            <div className="col-span-2">
+            <div className="md:col-span-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" name="pickup" checked={form.pickup} onChange={handleEditChange} className="rounded text-coral focus:ring-coral" />
                 <span className="text-xs uppercase tracking-wider text-ink/50">Antar Jemput (+Rp 5.000)</span>
               </label>
             </div>
-            <div className="col-span-2">
+            <div className="md:col-span-2">
               <label className="text-ink/40 text-xs uppercase tracking-wider mb-1 block">Catatan</label>
               <textarea name="notes" value={form.notes} onChange={handleEditChange} rows={2} className="w-full border-0 border-b-2 border-ink/10 px-0 py-2 text-ink focus:border-coral focus:ring-0 text-sm" />
             </div>
@@ -170,7 +170,7 @@ export default function OrderDetail() {
                 key={s}
                 onClick={() => handleStatus(s)}
                 disabled={i <= currentIdx}
-                className={`px-5 py-3 text-xs uppercase tracking-wider transition-all ${
+                className={`px-3 md:px-5 py-2 md:py-3 text-xs uppercase tracking-wider transition-all ${
                   i === currentIdx ? 'bg-ink text-white'
                   : i < currentIdx ? 'bg-ink/5 text-ink/30 cursor-not-allowed'
                   : 'bg-white text-ink/60 hover:bg-ink hover:text-white border border-ink/10'
@@ -181,7 +181,45 @@ export default function OrderDetail() {
             ))}
           </div>
         </div>
+
+        <div className="border-t border-ink/10 pt-6 mt-6">
+          <WaNotify orderId={order.id} phone={order.phone} />
+        </div>
       </div>
+    </div>
+  );
+}
+
+function WaNotify({ orderId, phone }) {
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSend = async () => {
+    setSending(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/send-wa`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success && data.waUrl) {
+        window.open(data.waUrl, '_blank');
+        setSent(true);
+      }
+    } catch {} finally {
+      setSending(false);
+    }
+  };
+
+  if (!phone) return null;
+
+  return (
+    <div>
+      <button
+        onClick={handleSend}
+        disabled={sending}
+        className="flex items-center gap-2 bg-green-600 text-white px-5 py-3 text-xs uppercase tracking-widest hover:bg-green-700 transition-all disabled:opacity-40"
+      >
+        <MessageCircle className="w-4 h-4" />
+        {sending ? 'Mengirim...' : sent ? 'Terkirim' : 'Kirim Notifikasi WhatsApp'}
+      </button>
     </div>
   );
 }

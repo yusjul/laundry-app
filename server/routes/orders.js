@@ -116,6 +116,44 @@ router.put('/:id', (req, res) => {
   res.json(updated);
 });
 
+const statusLabels = {
+  pending: 'Menunggu', diambil: 'Diambil', dicuci: 'Dicuci',
+  disetrika: 'Disetrika', selesai: 'Selesai', diantar: 'Diantar',
+};
+
+const waTemplates = {
+  pending: 'sedang MENUNGGU untuk diproses.',
+  diambil: 'sudah DIAMBIL oleh kurir kami.',
+  dicuci: 'sedang dalam proses PENCUCIAN.',
+  disetrika: 'sedang dalam proses SETRIKA.',
+  selesai: 'sudah SELESAI diproses dan siap diantar/diambil.',
+  diantar: 'sedang DIANTAR ke alamat Anda.',
+};
+
+router.post('/:id/send-wa', (req, res) => {
+  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+
+  const statusLabel = statusLabels[order.status] || order.status;
+  const template = waTemplates[order.status] || 'sedang diproses.';
+
+  const message =
+    `Halo ${order.customer_name},\n\n` +
+    `Laundry Anda dengan nomor order *${order.order_no}* ${template}\n\n` +
+    `Detail Pesanan:\n` +
+    `• Layanan: ${order.service_type}\n` +
+    `${order.weight > 0 ? `• Berat: ${order.weight} kg\n` : ''}` +
+    `• Total: Rp ${order.total_price.toLocaleString()}\n` +
+    `• Status: ${statusLabel}\n\n` +
+    `Terima kasih telah menggunakan LaundryKu!`;
+
+  const waUrl = `https://wa.me/${order.phone.replace(/^0/, '62').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+
+  console.log('[WA Notification]', { to: order.phone, order_no: order.order_no, status: order.status, message });
+
+  res.json({ success: true, waUrl, message });
+});
+
 router.delete('/:id', (req, res) => {
   const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
   if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
