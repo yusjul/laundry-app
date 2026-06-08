@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDB } from './db.js';
+
 import ordersRouter from './routes/orders.js';
 import expensesRouter from './routes/expenses.js';
 
@@ -23,8 +24,11 @@ app.get('*', (req, res) => {
   }
 });
 
-initDB().then(() => {
+await initDB();
+export default app;
+
+if (process.env.VERCEL !== '1') {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
-});
+}

@@ -1,10 +1,17 @@
 {
   "name": "laundry-app",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "cd server && npx nodemon index.js",
     "dev:client": "cd client && npm run dev"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "pg": "^8.13.0",
+    "sql.js": "^1.11.0"
   },
   "devDependencies": {
     "concurrently": "^8.2.0"

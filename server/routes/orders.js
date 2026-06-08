@@ -4,184 +4,220 @@ import { PRICES, getPickupFee } from '../config/prices.js';
 
 const router = Router();
 
-router.get('/prices', (req, res) => {
-  const { lat, lng } = req.query;
-  const fee = lat && lng ? getPickupFee(parseFloat(lat), parseFloat(lng)) : 5000;
-  res.json({ prices: PRICES, pickupFee: fee });
+router.get('/prices', async (req, res) => {
+  try {
+    const { lat, lng } = req.query;
+    const fee = lat && lng ? getPickupFee(parseFloat(lat), parseFloat(lng)) : 5000;
+    res.json({ prices: PRICES, pickupFee: fee });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.get('/kurirs/list', (req, res) => {
-  const kurirs = queryAll("SELECT id, name, phone FROM users WHERE role = 'kurir'");
-  res.json(kurirs);
+router.get('/kurirs/list', async (req, res) => {
+  try {
+    const kurirs = await queryAll("SELECT id, name, phone FROM users WHERE role = 'kurir'");
+    res.json(kurirs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.get('/', (req, res) => {
-  const { status, date, id_kurir_jemput, id_kurir_antar } = req.query;
-  let sql = `
-    SELECT orders.*, 
-           kj.name as kurir_jemput_name, 
-           ka.name as kurir_antar_name 
-    FROM orders
-    LEFT JOIN users kj ON orders.id_kurir_jemput = kj.id
-    LEFT JOIN users ka ON orders.id_kurir_antar = ka.id
-  `;
-  const params = [];
-  const conditions = [];
+router.get('/', async (req, res) => {
+  try {
+    const { status, date, id_kurir_jemput, id_kurir_antar } = req.query;
+    let sql = `
+      SELECT orders.*, 
+             kj.name as kurir_jemput_name, 
+             ka.name as kurir_antar_name 
+      FROM orders
+      LEFT JOIN users kj ON orders.id_kurir_jemput = kj.id
+      LEFT JOIN users ka ON orders.id_kurir_antar = ka.id
+    `;
+    const params = [];
+    const conditions = [];
 
-  if (status) {
-    conditions.push('orders.status = ?');
-    params.push(status);
-  }
-  if (date) {
-    conditions.push("date(orders.created_at) = ?");
-    params.push(date);
-  }
-  if (id_kurir_jemput) {
-    conditions.push('orders.id_kurir_jemput = ?');
-    params.push(id_kurir_jemput);
-  }
-  if (id_kurir_antar) {
-    conditions.push('orders.id_kurir_antar = ?');
-    params.push(id_kurir_antar);
-  }
+    if (status) {
+      conditions.push(`orders.status = $${params.length + 1}`);
+      params.push(status);
+    }
+    if (date) {
+      conditions.push(`orders.created_at::date = $${params.length + 1}`);
+      params.push(date);
+    }
+    if (id_kurir_jemput) {
+      conditions.push(`orders.id_kurir_jemput = $${params.length + 1}`);
+      params.push(id_kurir_jemput);
+    }
+    if (id_kurir_antar) {
+      conditions.push(`orders.id_kurir_antar = $${params.length + 1}`);
+      params.push(id_kurir_antar);
+    }
 
-  if (conditions.length) {
-    sql += ' WHERE ' + conditions.join(' AND ');
-  }
+    if (conditions.length) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
 
-  sql += ' ORDER BY orders.created_at DESC';
-  const orders = queryAll(sql, params);
-  res.json(orders);
+    sql += ' ORDER BY orders.created_at DESC';
+    const orders = await queryAll(sql, params);
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.get('/track', (req, res) => {
-  const { no } = req.query;
-  if (!no) return res.status(400).json({ error: 'Nomor order diperlukan' });
+router.get('/track', async (req, res) => {
+  try {
+    const { no } = req.query;
+    if (!no) return res.status(400).json({ error: 'Nomor order diperlukan' });
 
-  const order = queryOne(`
-    SELECT orders.*, 
-           kj.name as kurir_jemput_name, 
-           ka.name as kurir_antar_name 
-    FROM orders
-    LEFT JOIN users kj ON orders.id_kurir_jemput = kj.id
-    LEFT JOIN users ka ON orders.id_kurir_antar = ka.id
-    WHERE orders.order_no = ?
-  `, [no]);
-  
-  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+    const order = await queryOne(`
+      SELECT orders.*, 
+             kj.name as kurir_jemput_name, 
+             ka.name as kurir_antar_name 
+      FROM orders
+      LEFT JOIN users kj ON orders.id_kurir_jemput = kj.id
+      LEFT JOIN users ka ON orders.id_kurir_antar = ka.id
+      WHERE orders.order_no = $1
+    `, [no]);
+    
+    if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
 
-  res.json(order);
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.get('/:id', (req, res) => {
-  const order = queryOne(`
-    SELECT orders.*, 
-           kj.name as kurir_jemput_name, 
-           ka.name as kurir_antar_name 
-    FROM orders
-    LEFT JOIN users kj ON orders.id_kurir_jemput = kj.id
-    LEFT JOIN users ka ON orders.id_kurir_antar = ka.id
-    WHERE orders.id = ?
-  `, [req.params.id]);
-  
-  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
-  res.json(order);
+router.get('/:id', async (req, res) => {
+  try {
+    const order = await queryOne(`
+      SELECT orders.*, 
+             kj.name as kurir_jemput_name, 
+             ka.name as kurir_antar_name 
+      FROM orders
+      LEFT JOIN users kj ON orders.id_kurir_jemput = kj.id
+      LEFT JOIN users ka ON orders.id_kurir_antar = ka.id
+      WHERE orders.id = $1
+    `, [req.params.id]);
+    
+    if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.post('/', (req, res) => {
-  const { customer_name, phone, address, service_type, weight, pickup, notes, pickup_date, pickup_time, latitude, longitude, payment_method } = req.body;
+router.post('/', async (req, res) => {
+  try {
+    const { customer_name, phone, address, service_type, weight, pickup, notes, pickup_date, pickup_time, latitude, longitude, payment_method } = req.body;
 
-  if (!customer_name || !phone || !service_type) {
-    return res.status(400).json({ error: 'Nama, no HP, dan jenis layanan wajib diisi' });
+    if (!customer_name || !phone || !service_type) {
+      return res.status(400).json({ error: 'Nama, no HP, dan jenis layanan wajib diisi' });
+    }
+
+    const pricePerUnit = (PRICES[service_type] || {}).price || 0;
+    const unit = (PRICES[service_type] || {}).unit;
+    const qty = unit === 'kg' ? (parseFloat(weight) || 0) : 1;
+    const total_price = qty * pricePerUnit + (pickup ? getPickupFee(latitude, longitude) : 0);
+
+    const counter = await getNextSequence();
+    const d = new Date();
+    const y = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const orderNo = `LND${y}${mm}${dd}${String(counter).padStart(4, '0')}`;
+
+    await run(
+      `INSERT INTO orders (order_no, customer_name, phone, address, service_type, weight, pickup, notes, total_price, pickup_date, pickup_time, latitude, longitude, payment_method)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+      [orderNo, customer_name, phone, address || '', service_type, weight || 0, pickup ? 1 : 0, notes || '', total_price, pickup_date || '', pickup_time || '', latitude ?? null, longitude ?? null, payment_method || 'cod']
+    );
+
+    const order = await queryOne('SELECT * FROM orders WHERE order_no = $1', [orderNo]);
+    res.status(201).json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  const pricePerUnit = (PRICES[service_type] || {}).price || 0;
-  const unit = (PRICES[service_type] || {}).unit;
-  const qty = unit === 'kg' ? (parseFloat(weight) || 0) : 1;
-  const total_price = qty * pricePerUnit + (pickup ? getPickupFee(latitude, longitude) : 0);
-
-  const counter = getNextSequence();
-  const d = new Date();
-  const y = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const orderNo = `LND${y}${mm}${dd}${String(counter).padStart(4, '0')}`;
-
-  run(
-    `INSERT INTO orders (order_no, customer_name, phone, address, service_type, weight, pickup, notes, total_price, pickup_date, pickup_time, latitude, longitude, payment_method)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [orderNo, customer_name, phone, address || '', service_type, weight || 0, pickup ? 1 : 0, notes || '', total_price, pickup_date || '', pickup_time || '', latitude ?? null, longitude ?? null, payment_method || 'cod']
-  );
-
-  const order = queryOne('SELECT * FROM orders WHERE order_no = ?', [orderNo]);
-  res.status(201).json(order);
 });
 
-router.patch('/:id/status', (req, res) => {
-  const { status } = req.body;
-  const validStatuses = ['pending', 'diambil', 'dicuci', 'disetrika', 'selesai', 'diantar'];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ error: 'Status tidak valid' });
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ['pending', 'diambil', 'dicuci', 'disetrika', 'selesai', 'diantar'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Status tidak valid' });
+    }
+
+    await run(
+      "UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2",
+      [status, req.params.id]
+    );
+
+    const order = await queryOne('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  run(
-    "UPDATE orders SET status = ?, updated_at = datetime('now', 'localtime') WHERE id = ?",
-    [status, req.params.id]
-  );
-
-  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-  res.json(order);
 });
 
-router.patch('/:id/assign-kurir', (req, res) => {
-  const { id_kurir_jemput, id_kurir_antar } = req.body;
+router.patch('/:id/assign-kurir', async (req, res) => {
+  try {
+    const { id_kurir_jemput, id_kurir_antar } = req.body;
 
-  let sql = 'UPDATE orders SET ';
-  const params = [];
-  const sets = [];
+    let sql = 'UPDATE orders SET ';
+    const params = [];
+    const sets = [];
 
-  if (id_kurir_jemput !== undefined) {
-    sets.push('id_kurir_jemput = ?');
-    params.push(id_kurir_jemput);
+    if (id_kurir_jemput !== undefined) {
+      sets.push(`id_kurir_jemput = $${params.length + 1}`);
+      params.push(id_kurir_jemput);
+    }
+    if (id_kurir_antar !== undefined) {
+      sets.push(`id_kurir_antar = $${params.length + 1}`);
+      params.push(id_kurir_antar);
+    }
+
+    if (sets.length === 0) {
+      return res.status(400).json({ error: 'Tidak ada data kurir yang diupdate' });
+    }
+
+    sql += sets.join(', ') + `, updated_at = NOW() WHERE id = $${params.length + 1}`;
+    params.push(req.params.id);
+
+    await run(sql, params);
+    const order = await queryOne('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  if (id_kurir_antar !== undefined) {
-    sets.push('id_kurir_antar = ?');
-    params.push(id_kurir_antar);
-  }
-
-  if (sets.length === 0) {
-    return res.status(400).json({ error: 'Tidak ada data kurir yang diupdate' });
-  }
-
-  sql += sets.join(', ') + ", updated_at = datetime('now', 'localtime') WHERE id = ?";
-  params.push(req.params.id);
-
-  run(sql, params);
-  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-  res.json(order);
 });
 
-router.put('/:id', (req, res) => {
-  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+router.put('/:id', async (req, res) => {
+  try {
+    const order = await queryOne('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
 
-  const { customer_name, phone, address, service_type, weight, pickup, notes, pickup_date, pickup_time, latitude, longitude, payment_method } = req.body;
-  if (!customer_name || !phone || !service_type) {
-    return res.status(400).json({ error: 'Nama, no HP, dan jenis layanan wajib diisi' });
+    const { customer_name, phone, address, service_type, weight, pickup, notes, pickup_date, pickup_time, latitude, longitude, payment_method } = req.body;
+    if (!customer_name || !phone || !service_type) {
+      return res.status(400).json({ error: 'Nama, no HP, dan jenis layanan wajib diisi' });
+    }
+
+    const pricePerUnit = (PRICES[service_type] || {}).price || 0;
+    const unit = (PRICES[service_type] || {}).unit;
+    const qty = unit === 'kg' ? (parseFloat(weight) || 0) : 1;
+    const total_price = qty * pricePerUnit + (pickup ? getPickupFee(latitude, longitude) : 0);
+
+    await run(
+      `UPDATE orders SET customer_name = $1, phone = $2, address = $3, service_type = $4, weight = $5, pickup = $6, notes = $7, total_price = $8, pickup_date = $9, pickup_time = $10, latitude = $11, longitude = $12, payment_method = $13, updated_at = NOW() WHERE id = $14`,
+      [customer_name, phone, address || '', service_type, weight || 0, pickup ? 1 : 0, notes || '', total_price, pickup_date || '', pickup_time || '', latitude ?? null, longitude ?? null, payment_method || 'cod', req.params.id]
+    );
+
+    const updated = await queryOne('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  const pricePerUnit = (PRICES[service_type] || {}).price || 0;
-  const unit = (PRICES[service_type] || {}).unit;
-  const qty = unit === 'kg' ? (parseFloat(weight) || 0) : 1;
-  const total_price = qty * pricePerUnit + (pickup ? getPickupFee(latitude, longitude) : 0);
-
-  run(
-    `UPDATE orders SET customer_name = ?, phone = ?, address = ?, service_type = ?, weight = ?, pickup = ?, notes = ?, total_price = ?, pickup_date = ?, pickup_time = ?, latitude = ?, longitude = ?, payment_method = ?, updated_at = datetime('now', 'localtime') WHERE id = ?`,
-    [customer_name, phone, address || '', service_type, weight || 0, pickup ? 1 : 0, notes || '', total_price, pickup_date || '', pickup_time || '', latitude ?? null, longitude ?? null, payment_method || 'cod', req.params.id]
-  );
-
-  const updated = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-  res.json(updated);
 });
 
 const statusLabels = {
@@ -198,47 +234,59 @@ const waTemplates = {
   diantar: 'sedang DIANTAR ke alamat Anda.',
 };
 
-router.post('/:id/send-wa', (req, res) => {
-  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+router.post('/:id/send-wa', async (req, res) => {
+  try {
+    const order = await queryOne('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
 
-  const statusLabel = statusLabels[order.status] || order.status;
-  const template = waTemplates[order.status] || 'sedang diproses.';
+    const statusLabel = statusLabels[order.status] || order.status;
+    const template = waTemplates[order.status] || 'sedang diproses.';
 
-  const message =
-    `Halo ${order.customer_name},\n\n` +
-    `Laundry Anda dengan nomor order *${order.order_no}* ${template}\n\n` +
-    `Detail Pesanan:\n` +
-    `• Layanan: ${order.service_type}\n` +
-    `${order.weight > 0 ? `• Berat: ${order.weight} kg\n` : ''}` +
-    `• Total: Rp ${order.total_price.toLocaleString()}\n` +
-    `• Status: ${statusLabel}\n\n` +
-    `Terima kasih telah menggunakan LaundryKu!`;
+    const message =
+      `Halo ${order.customer_name},\n\n` +
+      `Laundry Anda dengan nomor order *${order.order_no}* ${template}\n\n` +
+      `Detail Pesanan:\n` +
+      `• Layanan: ${order.service_type}\n` +
+      `${order.weight > 0 ? `• Berat: ${order.weight} kg\n` : ''}` +
+      `• Total: Rp ${order.total_price.toLocaleString()}\n` +
+      `• Status: ${statusLabel}\n\n` +
+      `Terima kasih telah menggunakan LaundryKu!`;
 
-  const waUrl = `https://wa.me/${order.phone.replace(/^0/, '62').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+    const waUrl = `https://wa.me/${order.phone.replace(/^0/, '62').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
 
-  console.log('[WA Notification]', { to: order.phone, order_no: order.order_no, status: order.status, message });
+    console.log('[WA Notification]', { to: order.phone, order_no: order.order_no, status: order.status, message });
 
-  res.json({ success: true, waUrl, message });
+    res.json({ success: true, waUrl, message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.delete('/:id', (req, res) => {
-  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
-  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+router.delete('/:id', async (req, res) => {
+  try {
+    const order = await queryOne('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
 
-  run('DELETE FROM orders WHERE id = ?', [req.params.id]);
-  res.json({ message: 'Order berhasil dihapus' });
+    await run('DELETE FROM orders WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Order berhasil dihapus' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-router.get('/report/summary', (req, res) => {
-  const today = queryOne(`
-    SELECT COUNT(*) as total_orders, COALESCE(SUM(total_price), 0) as total_revenue
-    FROM orders WHERE date(created_at) = date('now', 'localtime')
-  `);
+router.get('/report/summary', async (req, res) => {
+  try {
+    const today = await queryOne(`
+      SELECT COUNT(*) as total_orders, COALESCE(SUM(total_price), 0) as total_revenue
+      FROM orders WHERE created_at::date = NOW()::date
+    `);
 
-  const byStatus = queryAll('SELECT status, COUNT(*) as count FROM orders GROUP BY status');
+    const byStatus = await queryAll('SELECT status, COUNT(*) as count FROM orders GROUP BY status');
 
-  res.json({ today, byStatus });
+    res.json({ today, byStatus });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
