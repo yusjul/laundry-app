@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 const statusSteps = ['pending', 'diambil', 'dicuci', 'disetrika', 'selesai', 'diantar'];
 const statusLabels = {
@@ -11,16 +12,22 @@ export default function Tracking() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchParams] = useSearchParams();
 
-  const handleTrack = async (e) => {
-    e.preventDefault();
-    if (!orderNo.trim()) return;
+  useEffect(() => {
+    const no = searchParams.get('no');
+    if (no) {
+      setOrderNo(no);
+      trackOrder(no);
+    }
+  }, []);
+
+  const trackOrder = async (no) => {
     setLoading(true);
     setError('');
     setOrder(null);
-
     try {
-      const res = await fetch(`/api/orders/track?no=${encodeURIComponent(orderNo.trim())}`);
+      const res = await fetch(`/api/orders/track?no=${encodeURIComponent(no.trim())}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Order tidak ditemukan');
@@ -34,14 +41,20 @@ export default function Tracking() {
     }
   };
 
+  const handleTrack = async (e) => {
+    e.preventDefault();
+    if (!orderNo.trim()) return;
+    trackOrder(orderNo.trim());
+  };
+
   const currentStep = order ? statusSteps.indexOf(order.status) : -1;
 
   return (
-    <div className="max-w-xl mx-auto px-6 py-20">
-      <div className="mb-12">
-        <p className="text-coral font-medium text-sm tracking-[0.3em] uppercase mb-3">Tracking</p>
-        <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight">Status Cucian</h1>
-        <p className="text-ink/50 mt-3">Masukkan nomor order yang diberikan saat pemesanan.</p>
+    <div className="max-w-xl mx-auto px-4 md:px-6 py-8 md:py-20">
+      <div className="mb-6 md:mb-12">
+        <p className="text-coral font-medium text-xs md:text-sm tracking-[0.3em] uppercase mb-2 md:mb-3">Tracking</p>
+        <h1 className="font-display text-2xl md:text-5xl text-ink leading-tight">Status Cucian</h1>
+        <p className="text-ink/50 text-sm md:text-base mt-2 md:mt-3">Masukkan nomor order yang diberikan saat pemesanan.</p>
       </div>
 
       <form onSubmit={handleTrack} className="flex gap-3 mb-12">
@@ -59,7 +72,7 @@ export default function Tracking() {
       {error && <p className="text-coral text-sm text-center mb-6">{error}</p>}
 
       {order && (
-        <div className="bg-white p-8 animate-fade-in">
+        <div className="bg-white p-4 md:p-8 animate-fade-in">
           <div className="text-center mb-8">
             <p className="text-xs uppercase tracking-widest text-ink/40 mb-2">Nomor Order</p>
             <p className="font-display text-3xl text-coral">{order.order_no}</p>

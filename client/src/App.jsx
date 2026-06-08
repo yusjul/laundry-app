@@ -3,7 +3,7 @@ import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import Beranda from './pages/Beranda';
 import Harga from './pages/Harga';
-import Pesan from './pages/Pesan';
+import Pesan from './pages/Pesan/index';
 import Tracking from './pages/Tracking';
 import Dashboard from './pages/admin/Dashboard';
 import Orders from './pages/admin/Orders';
