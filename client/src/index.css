@@ -397,6 +397,106 @@
   animation: float-y-custom 10s ease-in-out infinite, rotate-z-custom 30s linear infinite;
 }
 
+/* ===== PREMIUM GLOBAL BACKGROUND SYSTEM ===== */
+
+/* Fabric waves — slow horizontal sway */
+@keyframes fabric-sway {
+  0%   { transform: translateX(0)   translateY(0)   scaleY(1); }
+  33%  { transform: translateX(18px) translateY(-6px) scaleY(1.02); }
+  66%  { transform: translateX(-12px) translateY(4px) scaleY(0.98); }
+  100% { transform: translateX(0)   translateY(0)   scaleY(1); }
+}
+
+/* Soap bubble — float upward and fade */
+@keyframes bubble-rise {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.85);
+    opacity: 0;
+  }
+  10% { opacity: 0.7; }
+  50% { transform: translateY(-40vh) translateX(8px) scale(1.05); opacity: 0.5; }
+  85% { opacity: 0.3; }
+  100% {
+    transform: translateY(-85vh) translateX(-4px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* Dust particles — slow diagonal drift */
+@keyframes dust-drift {
+  0%   { transform: translate(0, 0) scale(0.8); opacity: 0; }
+  15%  { opacity: 0.55; }
+  85%  { opacity: 0.45; }
+  100% { transform: translate(60px, -120px) scale(1.1); opacity: 0; }
+}
+
+/* Global atmospheric light shift — extremely slow */
+@keyframes light-shift {
+  0%   { opacity: 0.5; transform: scale(1) translate(0, 0); }
+  50%  { opacity: 0.8; transform: scale(1.08) translate(20px, -15px); }
+  100% { opacity: 0.5; transform: scale(1) translate(0, 0); }
+}
+
+/* Fabric wave path animation */
+@keyframes fabric-path-wave {
+  0%, 100% { d: path("M -100 60 Q 200 0 500 55 T 1100 50 T 1700 55"); }
+  50%       { d: path("M -100 45 Q 200 90 500 40 T 1100 65 T 1700 40"); }
+}
+
+/* Steam wisps */
+@keyframes steam-rise {
+  0%   { transform: translateY(0) scaleX(1); opacity: 0; }
+  20%  { opacity: 0.4; }
+  60%  { transform: translateY(-30px) scaleX(1.5); opacity: 0.25; }
+  100% { transform: translateY(-60px) scaleX(0.8); opacity: 0; }
+}
+
+/* Helper classes */
+.animate-fabric-sway-slow {
+  animation: fabric-sway 28s ease-in-out infinite;
+}
+.animate-fabric-sway-medium {
+  animation: fabric-sway 18s ease-in-out infinite reverse;
+}
+.animate-fabric-sway-fast {
+  animation: fabric-sway 12s ease-in-out infinite;
+}
+.animate-bubble-rise {
+  animation: bubble-rise linear infinite;
+}
+.animate-dust-drift {
+  animation: dust-drift linear infinite;
+}
+.animate-light-shift {
+  animation: light-shift 40s ease-in-out infinite;
+}
+.animate-steam-rise {
+  animation: steam-rise 4s ease-out infinite;
+}
+
+/* Global background wrapper — fixed behind everything */
+.lku-global-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  /* Base ivory-cream luxury gradient */
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 20%, rgba(255,220,215,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 85% 75%, rgba(23,23,45,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(255,240,235,0.12) 0%, transparent 60%),
+    linear-gradient(160deg, #fdfaf7 0%, #faf6f2 35%, #fdf8f5 65%, #f8f4f0 100%);
+}
+
+/* Section-specific contextual overlays */
+.lku-section-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 @keyframes environment-float-1 {
   0%, 100% { transform: translateY(0) translate3d(0, 0, 40px); }
   50% { transform: translateY(-8px) translate3d(0, 0, 40px); }

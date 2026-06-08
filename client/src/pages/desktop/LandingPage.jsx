@@ -596,13 +596,215 @@ export default function DesktopLandingPage() {
     background: `radial-gradient(circle at ${sheenX + 50}% ${sheenY + 50}%, rgba(255, 255, 255, 0.4) 0%, transparent 65%)`,
   };
 
-  return (
-    <div className="min-h-screen animated-mesh-bg text-deep-navy flex flex-col font-body selection:bg-soft-coral selection:text-white relative">
-      
-      {/* Global Noise film grain overlay */}
-      <div className="noise-overlay" />
+  // Pre-compute bubble data once (stable across renders)
+  const globalBubbles = [
+    { id:'b1', left:'6%',  bottom:'8%',   r:14, dur:'22s', delay:'0s'  },
+    { id:'b2', left:'18%', bottom:'22%',  r:9,  dur:'28s', delay:'6s'  },
+    { id:'b3', left:'31%', bottom:'5%',   r:18, dur:'32s', delay:'12s' },
+    { id:'b4', left:'47%', bottom:'12%',  r:11, dur:'25s', delay:'3s'  },
+    { id:'b5', left:'58%', bottom:'30%',  r:16, dur:'35s', delay:'9s'  },
+    { id:'b6', left:'72%', bottom:'6%',   r:12, dur:'20s', delay:'15s' },
+    { id:'b7', left:'84%', bottom:'18%',  r:20, dur:'30s', delay:'5s'  },
+    { id:'b8', left:'93%', bottom:'42%',  r:8,  dur:'24s', delay:'18s' },
+    { id:'b9', left:'38%', bottom:'55%',  r:10, dur:'38s', delay:'8s'  },
+    { id:'b10',left:'62%', bottom:'70%',  r:15, dur:'26s', delay:'2s'  },
+    { id:'b11',left:'22%', bottom:'78%',  r:7,  dur:'42s', delay:'11s' },
+    { id:'b12',left:'78%', bottom:'85%',  r:13, dur:'33s', delay:'16s' },
+  ];
+  const globalDust = [
+    { id:'d1',  left:'4%',  top:'20%', s:'w-1 h-1', dur:'18s', delay:'0s'  },
+    { id:'d2',  left:'14%', top:'55%', s:'w-1.5 h-1.5', dur:'24s', delay:'4s'  },
+    { id:'d3',  left:'26%', top:'38%', s:'w-1 h-1', dur:'16s', delay:'8s'  },
+    { id:'d4',  left:'42%', top:'72%', s:'w-1.5 h-1.5', dur:'22s', delay:'2s'  },
+    { id:'d5',  left:'55%', top:'15%', s:'w-1 h-1', dur:'30s', delay:'12s' },
+    { id:'d6',  left:'68%', top:'48%', s:'w-1 h-1', dur:'20s', delay:'7s'  },
+    { id:'d7',  left:'80%', top:'28%', s:'w-1.5 h-1.5', dur:'26s', delay:'3s'  },
+    { id:'d8',  left:'90%', top:'62%', s:'w-1 h-1', dur:'35s', delay:'9s'  },
+    { id:'d9',  left:'33%', top:'85%', s:'w-1 h-1', dur:'19s', delay:'14s' },
+    { id:'d10', left:'72%', top:'90%', s:'w-1 h-1', dur:'28s', delay:'6s'  },
+    { id:'d11', left:'48%', top:'6%',  s:'w-1.5 h-1.5', dur:'23s', delay:'10s' },
+    { id:'d12', left:'87%', top:'77%', s:'w-1 h-1', dur:'32s', delay:'1s'  },
+    { id:'d13', left:'10%', top:'92%', s:'w-1 h-1', dur:'21s', delay:'17s' },
+    { id:'d14', left:'60%', top:'33%', s:'w-1 h-1', dur:'27s', delay:'5s'  },
+    { id:'d15', left:'20%', top:'10%', s:'w-1 h-1', dur:'15s', delay:'13s' },
+  ];
 
-      {/* Decorative Fixed Header background blurring */}
+  return (
+    <div className="min-h-screen bg-transparent text-deep-navy flex flex-col font-body selection:bg-soft-coral selection:text-white relative">
+
+      {/* =========================================================
+          GLOBAL FIXED BACKGROUND — 5 DEPTH LAYERS
+          Fixed behind all content. Scrolls independently.
+          40% atmospheric lighting + 30% fabric + 20% bubbles + 10% contextual
+      ========================================================= */}
+      <div className="lku-global-bg">
+
+        {/* LAYER 1 — Luxury Atmospheric Gradient + Volumetric Lights */}
+        {/* Three slow-breathing ambient orbs; no hard edges */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ willChange: 'opacity' }}
+        >
+          {/* Primary blush glow — top-left, very slow breath */}
+          <div
+            className="absolute animate-light-shift"
+            style={{
+              top: '-10%', left: '-5%',
+              width: '65vw', height: '65vw',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(255,200,195,0.22) 0%, rgba(255,200,195,0.06) 45%, transparent 70%)',
+              filter: 'blur(60px)',
+            }}
+          />
+          {/* Secondary navy whisper — bottom-right */}
+          <div
+            className="absolute animate-light-shift"
+            style={{
+              bottom: '-15%', right: '-8%',
+              width: '55vw', height: '55vw',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(23,23,45,0.07) 0%, transparent 65%)',
+              filter: 'blur(80px)',
+              animationDelay: '15s',
+            }}
+          />
+          {/* Center warm ivory bloom */}
+          <div
+            className="absolute"
+            style={{
+              top: '25%', left: '30%',
+              width: '40vw', height: '40vw',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(255,248,242,0.35) 0%, transparent 70%)',
+              filter: 'blur(100px)',
+            }}
+          />
+          {/* Volumetric diagonal light ray 1 */}
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              top: 0, right: '22%',
+              width: '2px', height: '45vh',
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.18), transparent)',
+              transform: 'rotate(18deg)',
+              transformOrigin: 'top center',
+              filter: 'blur(3px)',
+              opacity: 0.6,
+            }}
+          />
+          {/* Volumetric diagonal light ray 2 */}
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              top: 0, right: '28%',
+              width: '1px', height: '38vh',
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), transparent)',
+              transform: 'rotate(14deg)',
+              transformOrigin: 'top center',
+              filter: 'blur(2px)',
+              opacity: 0.5,
+            }}
+          />
+        </div>
+
+        {/* LAYER 2 — Fabric Waves (large flowing textile forms) */}
+        <div className="absolute inset-0 pointer-events-none hidden lg:block">
+          {/* Fabric ribbon 1 — top, dusty rose, very slow sway */}
+          <svg
+            className="absolute animate-fabric-sway-slow"
+            style={{ top: '-2%', left: '-5%', width: '110%', height: 'auto', opacity: 0.07 }}
+            viewBox="0 0 1440 160" fill="none" preserveAspectRatio="none"
+          >
+            <path
+              d="M-100 80 Q200 20 500 90 T1100 70 T1540 80"
+              stroke="#C4998A" strokeWidth="90" strokeLinecap="round"
+              fill="none" opacity="0.6"
+            />
+          </svg>
+          {/* Fabric ribbon 2 — center-right, blush, medium sway */}
+          <svg
+            className="absolute animate-fabric-sway-medium"
+            style={{ top: '28%', right: '-8%', width: '70%', height: 'auto', opacity: 0.055 }}
+            viewBox="0 0 900 140" fill="none" preserveAspectRatio="none"
+          >
+            <path
+              d="M0 70 Q180 20 380 90 T750 60 T900 70"
+              stroke="#DBBDBD" strokeWidth="75" strokeLinecap="round"
+              fill="none" opacity="0.7"
+            />
+          </svg>
+          {/* Fabric ribbon 3 — bottom, ivory, slow sway */}
+          <svg
+            className="absolute animate-fabric-sway-slow"
+            style={{ bottom: '5%', left: '-3%', width: '100%', height: 'auto', opacity: 0.065, animationDelay: '10s' }}
+            viewBox="0 0 1440 130" fill="none" preserveAspectRatio="none"
+          >
+            <path
+              d="M-80 65 Q250 10 550 80 T1000 55 T1440 65"
+              stroke="#E8D5C8" strokeWidth="65" strokeLinecap="round"
+              fill="none" opacity="0.65"
+            />
+          </svg>
+        </div>
+
+        {/* LAYER 4 — Soap Bubbles (float upward across full page) */}
+        <div className="absolute inset-0 pointer-events-none hidden lg:block">
+          {globalBubbles.map(b => (
+            <div
+              key={b.id}
+              className="absolute animate-bubble-rise"
+              style={{
+                left: b.left,
+                bottom: b.bottom,
+                width: b.r * 2,
+                height: b.r * 2,
+                animationDuration: b.dur,
+                animationDelay: b.delay,
+                borderRadius: '50%',
+                border: '1px solid rgba(255,255,255,0.5)',
+                background: 'radial-gradient(circle at 35% 35%, rgba(255,255,255,0.55) 0%, rgba(255,230,225,0.15) 50%, rgba(255,255,255,0.05) 100%)',
+                boxShadow: 'inset 0 2px 6px rgba(255,255,255,0.7), 0 4px 12px rgba(210,170,160,0.12)',
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
+              }}
+            >
+              {/* Highlight dot */}
+              <div style={{
+                position:'absolute', top:'18%', left:'22%',
+                width: b.r * 0.38, height: b.r * 0.22,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.82)',
+                transform: 'rotate(-30deg)',
+              }} />
+            </div>
+          ))}
+        </div>
+
+        {/* LAYER 5 — Dust Particles & Atmospheric Sparkles */}
+        <div className="absolute inset-0 pointer-events-none hidden lg:block">
+          {globalDust.map(d => (
+            <div
+              key={d.id}
+              className={`absolute ${d.s} animate-dust-drift rounded-full`}
+              style={{
+                left: d.left,
+                top: d.top,
+                animationDuration: d.dur,
+                animationDelay: d.delay,
+                background: 'radial-gradient(circle, rgba(255,220,210,0.7) 0%, transparent 70%)',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Film grain noise overlay */}
+        <div className="noise-overlay" />
+      </div>
+      {/* =========================================================
+          END GLOBAL BACKGROUND
+      ========================================================= */}
+
+      {/* Decorative glassmorphic header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-white/30 border-b border-deep-navy/5 px-8 py-5 flex items-center justify-between transition-all duration-300">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-deep-navy flex items-center justify-center font-display font-black text-warm-ivory shadow-lg">
@@ -626,21 +828,20 @@ export default function DesktopLandingPage() {
         onMouseLeave={handleMouseLeave}
         className="premium-hero-bg relative overflow-hidden pt-28 pb-32 px-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-16 items-center"
       >
-        {/* Layer 1: Volumetric Glowing Orbs & Pink/Navy Ambient Glows (Speed 0.02) */}
+        {/* Layer 1: Hero section-specific accent light — complements the global background */}
+        {/* Lighter than before since GlobalBackground already provides primary atmosphere */}
         <div
           style={{
-            transform: `translate3d(${mousePos.x * 2.4}px, ${mousePos.y * 2.4 + scrollY * 0.02}px, 0)`,
-            transition: isHovered ? 'transform 0.15s ease-out' : 'transform 0.8s ease-out',
+            transform: `translate3d(${mousePos.x * 3}px, ${mousePos.y * 3}px, 0)`,
+            transition: isHovered ? 'transform 0.2s ease-out' : 'transform 0.9s ease-out',
             willChange: 'transform'
           }}
           className="absolute inset-0 pointer-events-none z-0"
         >
-          {/* Soft Pink Ambient Glow */}
-          <div className="absolute top-[10%] left-[10%] w-[600px] h-[600px] rounded-full bg-soft-coral/12 blur-[150px] animate-blob-1" />
-          {/* Navy Ambient Glow */}
-          <div className="absolute bottom-[5%] right-[10%] w-[550px] h-[550px] rounded-full bg-deep-navy/8 blur-[130px] animate-blob-2" />
-          {/* Volumetric Light Rays (Bloom) */}
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-60 blur-xl mix-blend-screen" />
+          {/* Blush accent glow — hero only, complements the washing machine position */}
+          <div className="absolute top-[5%] left-[5%] w-[380px] h-[380px] rounded-full bg-soft-coral/8 blur-[110px]" />
+          {/* Very subtle center bloom to lift hero text area */}
+          <div className="absolute top-[20%] left-[25%] w-[500px] h-[350px] rounded-full bg-white/20 blur-[80px]" />
         </div>
 
         {/* Layer 2: Floating Fabric Ecosystem (Depth Blur 8px) */}
@@ -1191,11 +1392,39 @@ export default function DesktopLandingPage() {
         </div>
       </div>
 
-      {/* Feature Section with Hover Glow & Animation */}
+      {/* Feature Section — Hero objects fade, fabric texture takes over */}
       <section id="fitur" className="py-32 px-8 max-w-6xl mx-auto w-full border-t border-deep-navy/10 relative bg-transparent">
-        <div className="absolute top-0 right-1/4 w-72 h-72 rounded-full bg-rose-pink/5 blur-[100px] pointer-events-none" />
-        <div className="absolute -left-16 top-1/3 w-80 h-80 rounded-full bg-soft-coral/5 blur-[120px] pointer-events-none" />
-        <div className="absolute right-0 bottom-1/4 w-96 h-96 rounded-full bg-deep-navy/[0.03] blur-[150px] pointer-events-none" />
+        {/* Contextual overlay: soft fabric folds + textile geometry */}
+        <div className="lku-section-overlay opacity-100 hidden lg:block">
+          {/* Fabric fold — left edge, partially cropped */}
+          <svg
+            className="absolute -left-24 top-1/4 animate-fabric-sway-slow"
+            style={{ width: '280px', opacity: 0.055 }}
+            viewBox="0 0 200 400" fill="none"
+          >
+            <path d="M180 0 C80 50 180 150 80 200 C-20 250 80 350 180 400" stroke="#C4998A" strokeWidth="55" strokeLinecap="round" fill="none" />
+          </svg>
+          {/* Textile geometry — subtle diamond form, right side */}
+          <svg
+            className="absolute right-0 bottom-1/3 animate-fabric-sway-medium"
+            style={{ width: '200px', opacity: 0.04 }}
+            viewBox="0 0 200 300" fill="none"
+          >
+            <path d="M200 0 C120 40 200 120 100 160 C0 200 80 280 200 300" stroke="#DBBDBD" strokeWidth="50" strokeLinecap="round" fill="none" />
+          </svg>
+          {/* Icon silhouette — laundry tag, top right, barely visible */}
+          <svg
+            className="absolute right-[8%] top-[10%] animate-float-slow"
+            style={{ width: '48px', opacity: 0.06 }}
+            viewBox="0 0 100 140" fill="none" stroke="#8B7B8B" strokeWidth="6"
+          >
+            <rect x="15" y="10" width="70" height="120" rx="10" />
+            <circle cx="50" cy="28" r="8" />
+            <line x1="28" y1="60" x2="72" y2="60" />
+            <line x1="28" y1="80" x2="72" y2="80" />
+            <line x1="28" y1="100" x2="55" y2="100" />
+          </svg>
+        </div>
 
         <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
           <p className="text-soft-coral font-extrabold text-xs tracking-[0.3em] uppercase">Fitur Aplikasi</p>
@@ -1234,7 +1463,7 @@ export default function DesktopLandingPage() {
         </div>
       </section>
 
-      {/* Gallery Section with 3D Parallax */}
+      {/* Gallery Section — laundry workspace atmosphere */}
       <section
         id="galeri"
         onMouseMove={handleGalleryMouseMove}
@@ -1242,20 +1471,58 @@ export default function DesktopLandingPage() {
         onMouseLeave={handleGalleryMouseLeave}
         className="py-32 px-8 border-t border-deep-navy/10 relative overflow-hidden"
       >
-        {/* Ambient Backgrounds */}
+        {/* Contextual overlay: steam atmosphere + blurred workspace + hanging clothes */}
+        <div className="lku-section-overlay hidden lg:block">
+          {/* Steam wisps — 3 rising columns, very subtle */}
+          {[{l:'18%',delay:'0s'},{l:'48%',delay:'1.4s'},{l:'76%',delay:'2.7s'}].map((s,i)=>(
+            <div key={i} className="absolute bottom-0 animate-steam-rise" style={{
+              left:s.l, width:'60px', height:'80px',
+              background:'radial-gradient(ellipse at 50% 100%, rgba(230,220,215,0.25) 0%, transparent 70%)',
+              filter:'blur(12px)',
+              animationDelay:s.delay, animationDuration:'5s'
+            }}/>
+          ))}
+          {/* Hanging garment silhouettes — far background, heavy blur */}
+          <svg
+            className="absolute top-[8%] left-[4%] animate-float-slow"
+            style={{ width:'50px', opacity:0.06, filter:'blur(3px)' }}
+            viewBox="0 0 60 100" fill="none" stroke="#8B7060" strokeWidth="4" strokeLinecap="round"
+          >
+            <path d="M30 15 C30 8 36 4 30 0 C24 -4 18 6 18 12" />
+            <path d="M4 28 L30 15 L56 28 Z" />
+            <path d="M12 28 L12 95 M48 28 L48 95" />
+            <path d="M12 95 L48 95" />
+          </svg>
+          <svg
+            className="absolute top-[5%] right-[6%] animate-float-medium"
+            style={{ width:'44px', opacity:0.05, filter:'blur(3px)', animationDelay:'2s' }}
+            viewBox="0 0 60 100" fill="none" stroke="#8B7060" strokeWidth="4" strokeLinecap="round"
+          >
+            <path d="M30 15 C30 8 36 4 30 0 C24 -4 18 6 18 12" />
+            <path d="M4 28 L30 15 L56 28 Z" />
+            <path d="M12 28 L12 95 M48 28 L48 95" />
+            <path d="M12 95 L48 95" />
+          </svg>
+          {/* Packaging table edge — bottom left, very subtle */}
+          <div className="absolute bottom-0 left-0 w-[45%] h-[3px]" style={{
+            background:'linear-gradient(to right, rgba(180,150,140,0.12), transparent)',
+            filter:'blur(2px)'
+          }}/>
+        </div>
+        {/* Ambient mouse-parallax accents (subtle, complement global BG) */}
         <div
           style={{
-            transform: `translate3d(${galleryMousePos.x * 25}px, ${galleryMousePos.y * 25}px, 0)`,
+            transform: `translate3d(${galleryMousePos.x * 20}px, ${galleryMousePos.y * 20}px, 0)`,
             transition: isGalleryHovered ? 'transform 0.15s ease-out' : 'transform 0.8s ease-out'
           }}
-          className="absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-soft-coral/5 blur-[120px] pointer-events-none z-0"
+          className="absolute top-1/4 right-1/4 w-[300px] h-[300px] rounded-full bg-soft-coral/4 blur-[100px] pointer-events-none z-0"
         />
         <div
           style={{
-            transform: `translate3d(${galleryMousePos.x * -25}px, ${galleryMousePos.y * -25}px, 0)`,
+            transform: `translate3d(${galleryMousePos.x * -20}px, ${galleryMousePos.y * -20}px, 0)`,
             transition: isGalleryHovered ? 'transform 0.15s ease-out' : 'transform 0.8s ease-out'
           }}
-          className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] rounded-full bg-rose-pink/8 blur-[100px] pointer-events-none z-0"
+          className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] rounded-full bg-rose-pink/5 blur-[90px] pointer-events-none z-0"
         />
 
         <div className="max-w-6xl mx-auto px-8 relative z-10">
@@ -1322,33 +1589,39 @@ export default function DesktopLandingPage() {
         onMouseLeave={handleWorkflowMouseLeave}
         className="py-32 border-t border-deep-navy/10 relative overflow-hidden w-full select-none bg-transparent"
       >
-        {/* Layer 1: Blurred gradient mesh background (Moves 2px) */}
+        {/* Contextual overlay: delivery route + tracking ecosystem — integrated, not dominant */}
+        <div className="lku-section-overlay z-0">
+          {/* Curved route path — very faint, behind everything */}
+          <svg
+            className="absolute pointer-events-none"
+            style={{ top:'30%', left:'0', width:'100%', height:'40%', opacity:0.07 }}
+            viewBox="0 0 1440 200" fill="none" preserveAspectRatio="none"
+          >
+            <path
+              d="M0 100 C200 40 320 160 500 100 C680 40 800 160 1000 100 C1200 40 1320 160 1440 100"
+              stroke="#FF8FA3" strokeWidth="3" strokeLinecap="round" strokeDasharray="12 8"
+            />
+          </svg>
+          {/* Route nodes — small dots along the path */}
+          {[{l:'3%',t:'calc(30% + 40px)'},{l:'25%',t:'calc(30% + 10px)'},{l:'47%',t:'calc(30% + 40px)'},{l:'68%',t:'calc(30% + 10px)'},{l:'92%',t:'calc(30% + 40px)'}].map((n,i)=>(
+            <div key={i} className="absolute" style={{
+              left:n.l, top:n.t,
+              width:'6px', height:'6px', borderRadius:'50%',
+              background:'rgba(255,143,163,0.25)',
+              boxShadow:'0 0 8px rgba(255,143,163,0.2)'
+            }}/>
+          ))}
+        </div>
+        {/* Subtle section-specific accent (lighter than before — GlobalBG already handles atmosphere) */}
         <div
           style={{
-            transform: `translate3d(${workflowMousePos.x * 2}px, ${workflowMousePos.y * 2 + scrollY * 0.05}px, 0)`,
+            transform: `translate3d(${workflowMousePos.x * 3}px, ${workflowMousePos.y * 3}px, 0)`,
             transition: isWorkflowHovered ? 'transform 0.15s ease-out' : 'transform 0.8s ease-out'
           }}
           className="absolute inset-0 pointer-events-none z-0"
         >
-          {/* Floating light source 1: Soft Pink */}
-          <div className="absolute top-[10%] left-[15%] w-96 h-96 rounded-full bg-soft-coral/[0.22] blur-[150px] animate-orb-pink" />
-          {/* Floating light source 2: Navy Glow */}
-          <div className="absolute bottom-[20%] right-[10%] w-[420px] h-[420px] rounded-full bg-deep-navy/[0.14] blur-[180px] animate-orb-navy" />
-          {/* Floating light source 3: Warm White */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-white/[0.16] blur-[140px] animate-orb-white" />
-        </div>
-
-        {/* Layer 2: Translucent shapes (Moves 5px) */}
-        <div
-          style={{
-            transform: `translate3d(${workflowMousePos.x * 5}px, ${workflowMousePos.y * 5 + scrollY * -0.06}px, 0)`,
-            transition: isWorkflowHovered ? 'transform 0.15s ease-out' : 'transform 0.8s ease-out'
-          }}
-          className="absolute inset-0 pointer-events-none z-0 opacity-15"
-        >
-          <div className="absolute top-[20%] left-[40%] w-32 h-32 rounded-full border border-deep-navy/5" />
-          <div className="absolute bottom-[30%] left-[10%] w-48 h-48 rounded-full border-2 border-dashed border-soft-coral/5" />
-          <div className="absolute top-[50%] right-[25%] w-24 h-24 rounded-lg border border-rose-pink/5 rotate-45" />
+          <div className="absolute top-[15%] left-[20%] w-72 h-72 rounded-full bg-soft-coral/[0.07] blur-[120px]" />
+          <div className="absolute bottom-[20%] right-[15%] w-64 h-64 rounded-full bg-rose-pink/[0.06] blur-[100px]" />
         </div>
 
         {/* Layer 3: Floating 3D Vector Objects (Moves 10px) */}
@@ -1717,20 +1990,55 @@ export default function DesktopLandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-deep-navy text-warm-ivory/50 py-16 text-center text-xs mt-auto">
-        <div className="max-w-6xl mx-auto px-8 space-y-5">
-          <div className="flex justify-center items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-warm-ivory flex items-center justify-center font-display font-black text-deep-navy shadow-sm">
+      {/* Footer — transparent, experience fades naturally into calm */}
+      <footer className="relative mt-auto py-20 text-center text-xs overflow-hidden">
+        {/* Section-specific contextual overlay: minimal textile + ambient glow */}
+        <div className="lku-section-overlay">
+          {/* Very soft pink ambient glow — top center */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] rounded-full bg-soft-coral/5 blur-[80px]" />
+          {/* Minimal fabric texture — bottom corners */}
+          <svg
+            className="absolute bottom-0 left-0 animate-fabric-sway-slow"
+            style={{ width:'200px', opacity:0.04 }}
+            viewBox="0 0 200 100" fill="none"
+          >
+            <path d="M-20 50 C30 20 70 80 130 50 T200 50" stroke="#C4998A" strokeWidth="30" strokeLinecap="round" fill="none" />
+          </svg>
+          <svg
+            className="absolute bottom-0 right-0 animate-fabric-sway-medium"
+            style={{ width:'180px', opacity:0.04, animationDelay:'8s' }}
+            viewBox="0 0 200 100" fill="none"
+          >
+            <path d="M0 50 C40 20 80 80 140 50 T220 50" stroke="#DBBDBD" strokeWidth="28" strokeLinecap="round" fill="none" />
+          </svg>
+          {/* A few residual dust particles */}
+          {[{l:'15%',t:'30%',s:14},{l:'55%',t:'60%',s:10},{l:'82%',t:'25%',s:12}].map((p,i)=>(
+            <div key={i} className="absolute rounded-full" style={{
+              left:p.l, top:p.t,
+              width:p.s, height:p.s,
+              background:'radial-gradient(circle, rgba(255,200,190,0.35) 0%, transparent 70%)',
+              filter:'blur(3px)'
+            }}/>
+          ))}
+        </div>
+        {/* Top fade — transitions section above into footer */}
+        <div
+          className="absolute top-0 left-0 right-0 h-24 pointer-events-none"
+          style={{ background:'linear-gradient(to bottom, rgba(253,250,247,0) 0%, rgba(253,250,247,0.4) 100%)' }}
+        />
+        {/* Footer content */}
+        <div className="relative z-10 max-w-6xl mx-auto px-8 space-y-5">
+          <div className="flex justify-center items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-deep-navy flex items-center justify-center font-display font-black text-warm-ivory shadow-md">
               LK
             </div>
-            <p className="font-display font-black text-white text-sm">LundryKu Laundry Ecosystem</p>
+            <p className="font-display font-black text-deep-navy text-base">LundryKu Laundry Ecosystem</p>
           </div>
-          <p className="max-w-md mx-auto text-white/40 leading-relaxed">
+          <p className="max-w-md mx-auto text-deep-navy/45 leading-relaxed">
             Sistem manajemen cucian modern terintegrasi secara dinamis untuk performa mobile smartphone.
           </p>
-          <div className="pt-6 border-t border-white/5">
-            <p>© 2026 LundryKu. Hak Cipta Dilindungi.</p>
+          <div className="pt-6 border-t border-deep-navy/8">
+            <p className="text-deep-navy/35 font-medium">© 2026 LundryKu. Hak Cipta Dilindungi.</p>
           </div>
         </div>
       </footer>
