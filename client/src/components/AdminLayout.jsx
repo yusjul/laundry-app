@@ -1,34 +1,39 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 
 const sidebarLinks = [
-  { to: '/admin', label: 'Dashboard', icon: '📊' },
-  { to: '/admin/orders', label: 'Orders', icon: '📋' },
-  { to: '/admin/laporan', label: 'Laporan', icon: '📈' },
+  { to: '/admin', label: 'Dashboard', icon: '01' },
+  { to: '/admin/orders', label: 'Orders', icon: '02' },
+  { to: '/admin/laporan', label: 'Laporan', icon: '03' },
 ];
 
 export default function AdminLayout() {
   const location = useLocation();
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-56 bg-white border-r border-gray-200 p-4">
-        <Link to="/" className="text-lg font-bold text-blue-600 mb-6 block">LaundryKu</Link>
+    <div className="flex min-h-screen bg-cream">
+      <aside className="w-60 bg-white border-r border-ink/5 p-6">
+        <Link to="/" className="font-display text-xl text-ink mb-8 block">
+          <span className="text-coral">L</span>undry<span className="text-coral">K</span>u
+        </Link>
         <nav className="space-y-1">
-          {sidebarLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === link.to ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <span>{link.icon}</span>
-              {link.label}
-            </Link>
-          ))}
+          {sidebarLinks.map((link) => {
+            const active = location.pathname === link.to;
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`flex items-center gap-3 px-3 py-3 text-sm transition-colors ${
+                  active ? 'bg-ink text-white' : 'text-ink/60 hover:text-ink hover:bg-ink/5'
+                }`}
+              >
+                <span className="font-display text-xs opacity-50">{link.icon}</span>
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
-      <div className="flex-1 p-6"><Outlet /></div>
+      <div className="flex-1 p-8"><Outlet /></div>
     </div>
   );
 }

@@ -46,60 +46,63 @@ export default function Pesan() {
 
   if (result) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-16 text-center">
-        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-          <div className="text-5xl mb-4">✅</div>
-          <h1 className="text-2xl font-bold mb-2">Pesanan Berhasil!</h1>
-          <p className="text-gray-500 mb-4">Simpan nomor order Anda untuk tracking</p>
-          <p className="text-3xl font-bold text-blue-600 mb-2">{result.order_no}</p>
-          <p className="text-gray-400 text-sm mb-6">Total: Rp {result.total_price.toLocaleString()}</p>
-          <button onClick={() => setResult(null)} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">Pesan Lagi</button>
+      <div className="max-w-lg mx-auto px-6 py-20">
+        <div className="bg-white p-10">
+          <div className="text-5xl mb-6">✓</div>
+          <h1 className="font-display text-3xl mb-2">Pesanan Berhasil!</h1>
+          <p className="text-ink/50 mb-6">Simpan nomor order ini untuk tracking:</p>
+          <p className="font-display text-4xl text-coral mb-2">{result.order_no}</p>
+          <p className="text-ink/40 text-sm mb-8">Total: Rp {result.total_price.toLocaleString()}</p>
+          <button onClick={() => setResult(null)} className="bg-ink text-white px-8 py-4 hover:bg-ink/90 transition-all uppercase text-sm tracking-widest">Pesan Lagi</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-16">
-      <h1 className="text-3xl font-bold text-center mb-2">Pesan Cucian</h1>
-      <p className="text-gray-500 text-center mb-8">Isi form di bawah, kami jemput cucian Anda</p>
+    <div className="max-w-xl mx-auto px-6 py-20">
+      <div className="mb-12">
+        <p className="text-coral font-medium text-sm tracking-[0.3em] uppercase mb-3">Order</p>
+        <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight">Pesan Cucian</h1>
+        <p className="text-ink/50 mt-3">Isi form di bawah, tim kami akan segera menghubungi Anda.</p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block text-sm font-medium mb-1">Nama Lengkap *</label>
-          <input name="customer_name" value={form.customer_name} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <label className="block text-xs font-medium uppercase tracking-widest text-ink/60 mb-2">Nama Lengkap *</label>
+          <input name="customer_name" value={form.customer_name} onChange={handleChange} required className="w-full bg-white border-0 border-b-2 border-ink/10 px-0 py-3 text-ink focus:border-coral focus:ring-0 transition-colors text-sm" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">No HP *</label>
-          <input name="phone" value={form.phone} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <label className="block text-xs font-medium uppercase tracking-widest text-ink/60 mb-2">No HP *</label>
+          <input name="phone" value={form.phone} onChange={handleChange} required className="w-full bg-white border-0 border-b-2 border-ink/10 px-0 py-3 text-ink focus:border-coral focus:ring-0 transition-colors text-sm" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Alamat</label>
-          <textarea name="address" value={form.address} onChange={handleChange} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <label className="block text-xs font-medium uppercase tracking-widest text-ink/60 mb-2">Alamat</label>
+          <textarea name="address" value={form.address} onChange={handleChange} rows={2} className="w-full bg-white border-0 border-b-2 border-ink/10 px-0 py-3 text-ink focus:border-coral focus:ring-0 transition-colors text-sm" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Jenis Layanan *</label>
-          <select name="service_type" value={form.service_type} onChange={handleChange} required className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label className="block text-xs font-medium uppercase tracking-widest text-ink/60 mb-2">Jenis Layanan *</label>
+          <select name="service_type" value={form.service_type} onChange={handleChange} required className="w-full bg-white border-0 border-b-2 border-ink/10 px-0 py-3 text-ink focus:border-coral focus:ring-0 transition-colors text-sm">
             <option value="">Pilih layanan</option>
             {services.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
         {(form.service_type === 'Cuci Kering' || form.service_type === 'Cuci Setrika') && (
-          <div>
-            <label className="block text-sm font-medium mb-1">Berat (kg)</label>
-            <input type="number" name="weight" value={form.weight} onChange={handleChange} step="0.5" min="0" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <div className="animate-fade-in">
+            <label className="block text-xs font-medium uppercase tracking-widest text-ink/60 mb-2">Berat (kg)</label>
+            <input type="number" name="weight" value={form.weight} onChange={handleChange} step="0.5" min="0" className="w-full bg-white border-0 border-b-2 border-ink/10 px-0 py-3 text-ink focus:border-coral focus:ring-0 transition-colors text-sm" />
           </div>
         )}
-        <div className="flex items-center gap-2">
-          <input type="checkbox" name="pickup" checked={form.pickup} onChange={handleChange} id="pickup" className="rounded" />
-          <label htmlFor="pickup" className="text-sm">Antar Jemput (+Rp 5.000)</label>
-        </div>
+        <label className="flex items-center gap-3 cursor-pointer group pt-2">
+          <input type="checkbox" name="pickup" checked={form.pickup} onChange={handleChange} className="w-4 h-4 text-coral border-ink/20 rounded focus:ring-coral" />
+          <span className="text-sm text-ink/70 group-hover:text-ink transition-colors">Antar Jemput (+Rp 5.000)</span>
+        </label>
         <div>
-          <label className="block text-sm font-medium mb-1">Catatan</label>
-          <textarea name="notes" value={form.notes} onChange={handleChange} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <label className="block text-xs font-medium uppercase tracking-widest text-ink/60 mb-2">Catatan</label>
+          <textarea name="notes" value={form.notes} onChange={handleChange} rows={2} className="w-full bg-white border-0 border-b-2 border-ink/10 px-0 py-3 text-ink focus:border-coral focus:ring-0 transition-colors text-sm" />
         </div>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+        {error && <p className="text-coral text-sm">{error}</p>}
+        <button type="submit" disabled={loading} className="w-full bg-ink text-white font-medium py-4 hover:bg-ink/90 transition-all uppercase text-sm tracking-widest disabled:opacity-50 mt-8">
           {loading ? 'Memproses...' : 'Pesan Sekarang'}
         </button>
       </form>

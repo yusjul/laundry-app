@@ -17,40 +17,39 @@ export default function Dashboard() {
       });
   }, []);
 
-  if (!data) return <p className="text-gray-500">Memuat...</p>;
-
-  const cards = [
-    { label: 'Order Hari Ini', value: data.todayOrders, color: 'text-blue-600' },
-    { label: 'Pendapatan Hari Ini', value: `Rp ${data.revenue.toLocaleString()}`, color: 'text-green-600' },
-    { label: 'Total Order', value: data.total, color: 'text-purple-600' },
-  ];
+  if (!data) return <p className="text-ink/50">Memuat...</p>;
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {cards.map((card) => (
-          <div key={card.label} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-            <p className="text-sm text-gray-500 mb-1">{card.label}</p>
-            <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+      <h1 className="font-display text-3xl mb-8">Dashboard</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        {[
+          { label: 'Order Hari Ini', value: data.todayOrders },
+          { label: 'Pendapatan Hari Ini', value: `Rp ${data.revenue.toLocaleString()}` },
+          { label: 'Total Order', value: data.total },
+        ].map((card) => (
+          <div key={card.label} className="bg-white p-6">
+            <p className="text-xs uppercase tracking-widest text-ink/40 mb-2">{card.label}</p>
+            <p className="font-display text-3xl text-ink">{card.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="font-semibold mb-3">Status Orders</h2>
+      <div className="bg-white p-6">
+        <h2 className="font-display text-lg mb-4">Status Orders</h2>
         <div className="space-y-2">
           {Object.entries(data.byStatus).map(([status, count]) => (
-            <div key={status} className="flex justify-between text-sm">
-              <span className="capitalize text-gray-600">{status}</span>
+            <div key={status} className="flex justify-between text-sm py-1">
+              <span className="capitalize text-ink/60">{status}</span>
               <span className="font-medium">{count}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <Link to="/admin/orders" className="inline-block mt-4 text-sm text-blue-600 hover:underline">
-        Lihat semua order &rarr;
+      <Link to="/admin/orders" className="inline-block mt-4 text-xs uppercase tracking-widest text-ink/50 hover:text-ink transition-colors">
+        Lihat Semua Order &rarr;
       </Link>
     </div>
   );

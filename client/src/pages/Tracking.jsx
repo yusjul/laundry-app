@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 const statusSteps = ['pending', 'diambil', 'dicuci', 'disetrika', 'selesai', 'diantar'];
-
 const statusLabels = {
   pending: 'Menunggu', diambil: 'Diambil', dicuci: 'Dicuci',
   disetrika: 'Disetrika', selesai: 'Selesai', diantar: 'Diantar',
@@ -38,46 +37,62 @@ export default function Tracking() {
   const currentStep = order ? statusSteps.indexOf(order.status) : -1;
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-16">
-      <h1 className="text-3xl font-bold text-center mb-2">Tracking Cucian</h1>
-      <p className="text-gray-500 text-center mb-8">Masukkan nomor order untuk cek status</p>
+    <div className="max-w-xl mx-auto px-6 py-20">
+      <div className="mb-12">
+        <p className="text-coral font-medium text-sm tracking-[0.3em] uppercase mb-3">Tracking</p>
+        <h1 className="font-display text-4xl md:text-5xl text-ink leading-tight">Status Cucian</h1>
+        <p className="text-ink/50 mt-3">Masukkan nomor order yang diberikan saat pemesanan.</p>
+      </div>
 
-      <form onSubmit={handleTrack} className="flex gap-2 mb-8">
+      <form onSubmit={handleTrack} className="flex gap-3 mb-12">
         <input
           value={orderNo}
           onChange={(e) => setOrderNo(e.target.value)}
-          placeholder="Masukkan nomor order"
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Contoh: LND080625123"
+          className="flex-1 bg-white border-0 border-b-2 border-ink/10 px-0 py-3 text-ink focus:border-coral focus:ring-0 transition-colors text-sm"
         />
-        <button type="submit" disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium">
+        <button type="submit" disabled={loading} className="bg-ink text-white px-8 py-3 hover:bg-ink/90 transition-all uppercase text-sm tracking-widest disabled:opacity-50 shrink-0">
           {loading ? '...' : 'Cari'}
         </button>
       </form>
 
-      {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
+      {error && <p className="text-coral text-sm text-center mb-6">{error}</p>}
 
       {order && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="text-center mb-6">
-            <p className="text-sm text-gray-500">Nomor Order</p>
-            <p className="text-xl font-bold text-blue-600">{order.order_no}</p>
+        <div className="bg-white p-8 animate-fade-in">
+          <div className="text-center mb-8">
+            <p className="text-xs uppercase tracking-widest text-ink/40 mb-2">Nomor Order</p>
+            <p className="font-display text-3xl text-coral">{order.order_no}</p>
           </div>
 
-          <div className="space-y-2 mb-6 text-sm">
-            <div className="flex justify-between"><span className="text-gray-500">Nama:</span><span className="font-medium">{order.customer_name}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Layanan:</span><span className="font-medium">{order.service_type}</span></div>
-            {order.weight > 0 && <div className="flex justify-between"><span className="text-gray-500">Berat:</span><span className="font-medium">{order.weight} kg</span></div>}
-            <div className="flex justify-between"><span className="text-gray-500">Total:</span><span className="font-medium">Rp {order.total_price.toLocaleString()}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Status:</span><span className="font-medium text-blue-600">{statusLabels[order.status]}</span></div>
+          <div className="space-y-3 mb-10 text-sm border-b border-ink/10 pb-6">
+            {[
+              ['Nama', order.customer_name],
+              ['Layanan', order.service_type],
+              ...(order.weight > 0 ? [['Berat', `${order.weight} kg`]] : []),
+              ['Total', `Rp ${order.total_price.toLocaleString()}`],
+            ].map(([label, value]) => (
+              <div key={label} className="flex justify-between">
+                <span className="text-ink/50">{label}</span>
+                <span className="font-medium text-ink">{value}</span>
+              </div>
+            ))}
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="relative">
+            <div className="absolute top-3 left-3 bottom-3 w-0.5 bg-ink/10" />
             {statusSteps.map((s, i) => (
-              <div key={s} className="flex flex-col items-center">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white ${i <= currentStep ? 'bg-blue-600' : 'bg-gray-200'}`}>
+              <div key={s} className="flex items-center gap-4 mb-4 relative">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold z-10 transition-all duration-500 ${
+                  i <= currentStep ? 'bg-coral text-white' : 'bg-ink/10 text-ink/30'
+                }`}>
                   {i <= currentStep ? '✓' : i + 1}
                 </div>
-                <span className={`text-[10px] mt-1 ${i <= currentStep ? 'text-blue-600 font-medium' : 'text-gray-400'}`}>{statusLabels[s]}</span>
+                <span className={`text-sm transition-colors ${
+                  i <= currentStep ? 'text-ink font-medium' : 'text-ink/30'
+                }`}>
+                  {statusLabels[s]}
+                </span>
               </div>
             ))}
           </div>
