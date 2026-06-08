@@ -1,6 +1,6 @@
 {
   "env": {
-    "DATABASE_URL": "postgresql://postgres:l-M>NX3yR.fe(I+T@db.lstevrrsspfqzyoihjwp.supabase.co:5432/postgres"
+    "DATABASE_URL": "postgresql://postgres.lstevrrsspfqzyoihjwp:l-M>NX3yR.fe(I+T@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres"
   },
   "installCommand": "npm install && cd client && npm install",
   "buildCommand": "cd client && npm run build",
