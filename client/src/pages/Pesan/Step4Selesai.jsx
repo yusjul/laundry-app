@@ -36,7 +36,7 @@ export default function Step4Selesai({ result, onReset }) {
             <ExternalLink className="w-4 h-4" /> Lacak Pesanan
           </Link>
           <a
-            href={`https://wa.me/6281234567890?text=${waMessage}`}
+            href={`https://wa.me/6289504968511?text=${waMessage}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 text-sm hover:bg-green-700 transition-all"
