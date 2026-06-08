@@ -31,13 +31,40 @@ export async function initDB() {
       notes TEXT DEFAULT '',
       status TEXT NOT NULL DEFAULT 'pending',
       total_price REAL DEFAULT 0,
+      pickup_date TEXT DEFAULT '',
+      pickup_time TEXT DEFAULT '',
+      latitude REAL DEFAULT NULL,
+      longitude REAL DEFAULT NULL,
+      payment_method TEXT DEFAULT 'cod',
+      photo_path TEXT DEFAULT NULL,
       created_at TEXT DEFAULT (datetime('now', 'localtime')),
       updated_at TEXT DEFAULT (datetime('now', 'localtime'))
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS order_sequence (
+      date TEXT PRIMARY KEY,
+      counter INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
   saveDB();
   return db;
+}
+
+export function getNextSequence() {
+  const today = new Date().toISOString().split('T')[0];
+  const row = queryOne('SELECT counter FROM order_sequence WHERE date = ?', [today]);
+  let next;
+  if (!row) {
+    next = 1;
+    run('INSERT INTO order_sequence (date, counter) VALUES (?, ?)', [today, next]);
+  } else {
+    next = row.counter + 1;
+    run('UPDATE order_sequence SET counter = ? WHERE date = ?', [next, today]);
+  }
+  return next;
 }
 
 export function getDB() {
