@@ -1,16 +1,12 @@
 import { Router } from 'express';
-import { queryAll, queryOne, run } from '../db.js';
+import { queryAll, queryOne, run, getNextSequence } from '../db.js';
+import { PRICES, PICKUP_FEE } from '../config/prices.js';
 
 const router = Router();
 
-function generateOrderNo() {
-  const date = new Date();
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const yy = String(date.getFullYear()).slice(-2);
-  const rand = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-  return `LND${dd}${mm}${yy}${rand}`;
-}
+router.get('/prices', (req, res) => {
+  res.json({ prices: PRICES, pickupFee: PICKUP_FEE });
+});
 
 router.get('/', (req, res) => {
   const { status, date } = req.query;
@@ -53,29 +49,28 @@ router.get('/:id', (req, res) => {
 });
 
 router.post('/', (req, res) => {
-  const { customer_name, phone, address, service_type, weight, pickup, notes } = req.body;
+  const { customer_name, phone, address, service_type, weight, pickup, notes, pickup_date, pickup_time, latitude, longitude, payment_method } = req.body;
 
   if (!customer_name || !phone || !service_type) {
     return res.status(400).json({ error: 'Nama, no HP, dan jenis layanan wajib diisi' });
   }
 
-  const prices = {
-    'Cuci Kering': 7000,
-    'Cuci Setrika': 10000,
-    'Dry Clean': 15000,
-    'Bed Cover': 25000,
-  };
+  const pricePerUnit = (PRICES[service_type] || {}).price || 0;
+  const unit = (PRICES[service_type] || {}).unit;
+  const qty = unit === 'kg' ? (parseFloat(weight) || 0) : 1;
+  const total_price = qty * pricePerUnit + (pickup ? PICKUP_FEE : 0);
 
-  const pricePerUnit = prices[service_type] || 0;
-  const qty = service_type === 'Cuci Kering' || service_type === 'Cuci Setrika' ? (weight || 1) : 1;
-  const total_price = qty * pricePerUnit + (pickup ? 5000 : 0);
-
-  const orderNo = generateOrderNo();
+  const counter = getNextSequence();
+  const d = new Date();
+  const y = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const orderNo = `LND${y}${mm}${dd}${String(counter).padStart(4, '0')}`;
 
   run(
-    `INSERT INTO orders (order_no, customer_name, phone, address, service_type, weight, pickup, notes, total_price)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [orderNo, customer_name, phone, address || '', service_type, weight || 0, pickup ? 1 : 0, notes || '', total_price]
+    `INSERT INTO orders (order_no, customer_name, phone, address, service_type, weight, pickup, notes, total_price, pickup_date, pickup_time, latitude, longitude, payment_method)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [orderNo, customer_name, phone, address || '', service_type, weight || 0, pickup ? 1 : 0, notes || '', total_price, pickup_date || '', pickup_time || '', latitude ?? null, longitude ?? null, payment_method || 'cod']
   );
 
   const order = queryOne('SELECT * FROM orders WHERE order_no = ?', [orderNo]);
@@ -102,19 +97,19 @@ router.put('/:id', (req, res) => {
   const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
   if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
 
-  const { customer_name, phone, address, service_type, weight, pickup, notes } = req.body;
+  const { customer_name, phone, address, service_type, weight, pickup, notes, pickup_date, pickup_time, latitude, longitude, payment_method } = req.body;
   if (!customer_name || !phone || !service_type) {
     return res.status(400).json({ error: 'Nama, no HP, dan jenis layanan wajib diisi' });
   }
 
-  const prices = { 'Cuci Kering': 7000, 'Cuci Setrika': 10000, 'Dry Clean': 15000, 'Bed Cover': 25000 };
-  const pricePerUnit = prices[service_type] || 0;
-  const qty = service_type === 'Cuci Kering' || service_type === 'Cuci Setrika' ? (weight || 1) : 1;
-  const total_price = qty * pricePerUnit + (pickup ? 5000 : 0);
+  const pricePerUnit = (PRICES[service_type] || {}).price || 0;
+  const unit = (PRICES[service_type] || {}).unit;
+  const qty = unit === 'kg' ? (parseFloat(weight) || 0) : 1;
+  const total_price = qty * pricePerUnit + (pickup ? PICKUP_FEE : 0);
 
   run(
-    `UPDATE orders SET customer_name = ?, phone = ?, address = ?, service_type = ?, weight = ?, pickup = ?, notes = ?, total_price = ?, updated_at = datetime('now', 'localtime') WHERE id = ?`,
-    [customer_name, phone, address || '', service_type, weight || 0, pickup ? 1 : 0, notes || '', total_price, req.params.id]
+    `UPDATE orders SET customer_name = ?, phone = ?, address = ?, service_type = ?, weight = ?, pickup = ?, notes = ?, total_price = ?, pickup_date = ?, pickup_time = ?, latitude = ?, longitude = ?, payment_method = ?, updated_at = datetime('now', 'localtime') WHERE id = ?`,
+    [customer_name, phone, address || '', service_type, weight || 0, pickup ? 1 : 0, notes || '', total_price, pickup_date || '', pickup_time || '', latitude ?? null, longitude ?? null, payment_method || 'cod', req.params.id]
   );
 
   const updated = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
