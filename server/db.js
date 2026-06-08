@@ -37,10 +37,24 @@ export async function initDB() {
       longitude REAL DEFAULT NULL,
       payment_method TEXT DEFAULT 'cod',
       photo_path TEXT DEFAULT NULL,
+      id_kurir_jemput INTEGER DEFAULT NULL,
+      id_kurir_antar INTEGER DEFAULT NULL,
       created_at TEXT DEFAULT (datetime('now', 'localtime')),
       updated_at TEXT DEFAULT (datetime('now', 'localtime'))
     )
   `);
+
+  // Try to alter table to add columns if database file already existed without them
+  try {
+    db.run("ALTER TABLE orders ADD COLUMN id_kurir_jemput INTEGER DEFAULT NULL");
+  } catch (e) {
+    // Column might already exist
+  }
+  try {
+    db.run("ALTER TABLE orders ADD COLUMN id_kurir_antar INTEGER DEFAULT NULL");
+  } catch (e) {
+    // Column might already exist
+  }
 
   db.run(`
     CREATE TABLE IF NOT EXISTS order_sequence (
@@ -60,6 +74,26 @@ export async function initDB() {
       created_at TEXT DEFAULT (datetime('now', 'localtime'))
     )
   `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      role TEXT NOT NULL CHECK(role IN ('admin', 'kurir', 'customer'))
+    )
+  `);
+
+  // Seeding mock users
+  const userCheck = queryOne("SELECT COUNT(*) as count FROM users");
+  if (!userCheck || userCheck.count === 0) {
+    run("INSERT INTO users (name, phone, password, role) VALUES (?, ?, ?, ?)", ['Joko Admin', '628123456789', 'admin123', 'admin']);
+    run("INSERT INTO users (name, phone, password, role) VALUES (?, ?, ?, ?)", ['Budi Kurir', '628111111111', 'kurir123', 'kurir']);
+    run("INSERT INTO users (name, phone, password, role) VALUES (?, ?, ?, ?)", ['Roni Kurir', '628222222222', 'kurir123', 'kurir']);
+    run("INSERT INTO users (name, phone, password, role) VALUES (?, ?, ?, ?)", ['Farhan Pelanggan', '628333333333', 'customer123', 'customer']);
+    console.log('[DB Seeding] Mock users seeded successfully.');
+  }
 
   saveDB();
   return db;

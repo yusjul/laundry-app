@@ -1,8 +1,10 @@
-import { PRICES, PICKUP_FEE, calculateSubtotal } from '../utils/prices';
+import { PRICES, calculateSubtotal, getPickupFee, getPickupDistance } from '../utils/prices';
 
 export default function OrderSummary({ form }) {
   const subtotal = calculateSubtotal(form.service_type, form.weight);
-  const total = subtotal + (form.pickup ? PICKUP_FEE : 0);
+  const pickupFee = getPickupFee(form.latitude, form.longitude);
+  const distance = getPickupDistance(form.latitude, form.longitude);
+  const total = subtotal + (form.pickup ? pickupFee : 0);
 
   const rows = [
     { label: 'Nama', value: form.customer_name },
@@ -12,7 +14,7 @@ export default function OrderSummary({ form }) {
     ...(form.service_type ? [{ label: 'Harga', value: (PRICES[form.service_type] || {}).label || '' }] : []),
     ...(form.weight && parseFloat(form.weight) > 0 ? [{ label: 'Berat', value: `${form.weight} kg` }] : []),
     ...(form.pickup_date ? [{ label: 'Jadwal Jemput', value: `${form.pickup_date} ${form.pickup_time || ''}` }] : []),
-    ...(form.pickup ? [{ label: 'Biaya Antar Jemput', value: `Rp ${PICKUP_FEE.toLocaleString()}` }] : []),
+    ...(form.pickup ? [{ label: 'Biaya Antar Jemput', value: `Rp ${pickupFee.toLocaleString()}${distance > 0 ? ` (${distance.toFixed(1)} km)` : ''}` }] : []),
     ...(form.notes ? [{ label: 'Catatan', value: form.notes }] : []),
     {
       label: 'Pembayaran',

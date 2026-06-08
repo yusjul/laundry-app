@@ -1,33 +1,55 @@
 import { Router } from 'express';
 import { queryAll, queryOne, run, getNextSequence } from '../db.js';
-import { PRICES, PICKUP_FEE } from '../config/prices.js';
+import { PRICES, getPickupFee } from '../config/prices.js';
 
 const router = Router();
 
 router.get('/prices', (req, res) => {
-  res.json({ prices: PRICES, pickupFee: PICKUP_FEE });
+  const { lat, lng } = req.query;
+  const fee = lat && lng ? getPickupFee(parseFloat(lat), parseFloat(lng)) : 5000;
+  res.json({ prices: PRICES, pickupFee: fee });
+});
+
+router.get('/kurirs/list', (req, res) => {
+  const kurirs = queryAll("SELECT id, name, phone FROM users WHERE role = 'kurir'");
+  res.json(kurirs);
 });
 
 router.get('/', (req, res) => {
-  const { status, date } = req.query;
-  let sql = 'SELECT * FROM orders';
+  const { status, date, id_kurir_jemput, id_kurir_antar } = req.query;
+  let sql = `
+    SELECT orders.*, 
+           kj.name as kurir_jemput_name, 
+           ka.name as kurir_antar_name 
+    FROM orders
+    LEFT JOIN users kj ON orders.id_kurir_jemput = kj.id
+    LEFT JOIN users ka ON orders.id_kurir_antar = ka.id
+  `;
   const params = [];
   const conditions = [];
 
   if (status) {
-    conditions.push('status = ?');
+    conditions.push('orders.status = ?');
     params.push(status);
   }
   if (date) {
-    conditions.push("date(created_at) = ?");
+    conditions.push("date(orders.created_at) = ?");
     params.push(date);
+  }
+  if (id_kurir_jemput) {
+    conditions.push('orders.id_kurir_jemput = ?');
+    params.push(id_kurir_jemput);
+  }
+  if (id_kurir_antar) {
+    conditions.push('orders.id_kurir_antar = ?');
+    params.push(id_kurir_antar);
   }
 
   if (conditions.length) {
     sql += ' WHERE ' + conditions.join(' AND ');
   }
 
-  sql += ' ORDER BY created_at DESC';
+  sql += ' ORDER BY orders.created_at DESC';
   const orders = queryAll(sql, params);
   res.json(orders);
 });
@@ -36,14 +58,32 @@ router.get('/track', (req, res) => {
   const { no } = req.query;
   if (!no) return res.status(400).json({ error: 'Nomor order diperlukan' });
 
-  const order = queryOne('SELECT * FROM orders WHERE order_no = ?', [no]);
+  const order = queryOne(`
+    SELECT orders.*, 
+           kj.name as kurir_jemput_name, 
+           ka.name as kurir_antar_name 
+    FROM orders
+    LEFT JOIN users kj ON orders.id_kurir_jemput = kj.id
+    LEFT JOIN users ka ON orders.id_kurir_antar = ka.id
+    WHERE orders.order_no = ?
+  `, [no]);
+  
   if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
 
   res.json(order);
 });
 
 router.get('/:id', (req, res) => {
-  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+  const order = queryOne(`
+    SELECT orders.*, 
+           kj.name as kurir_jemput_name, 
+           ka.name as kurir_antar_name 
+    FROM orders
+    LEFT JOIN users kj ON orders.id_kurir_jemput = kj.id
+    LEFT JOIN users ka ON orders.id_kurir_antar = ka.id
+    WHERE orders.id = ?
+  `, [req.params.id]);
+  
   if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
   res.json(order);
 });
@@ -58,7 +98,7 @@ router.post('/', (req, res) => {
   const pricePerUnit = (PRICES[service_type] || {}).price || 0;
   const unit = (PRICES[service_type] || {}).unit;
   const qty = unit === 'kg' ? (parseFloat(weight) || 0) : 1;
-  const total_price = qty * pricePerUnit + (pickup ? PICKUP_FEE : 0);
+  const total_price = qty * pricePerUnit + (pickup ? getPickupFee(latitude, longitude) : 0);
 
   const counter = getNextSequence();
   const d = new Date();
@@ -93,6 +133,34 @@ router.patch('/:id/status', (req, res) => {
   res.json(order);
 });
 
+router.patch('/:id/assign-kurir', (req, res) => {
+  const { id_kurir_jemput, id_kurir_antar } = req.body;
+
+  let sql = 'UPDATE orders SET ';
+  const params = [];
+  const sets = [];
+
+  if (id_kurir_jemput !== undefined) {
+    sets.push('id_kurir_jemput = ?');
+    params.push(id_kurir_jemput);
+  }
+  if (id_kurir_antar !== undefined) {
+    sets.push('id_kurir_antar = ?');
+    params.push(id_kurir_antar);
+  }
+
+  if (sets.length === 0) {
+    return res.status(400).json({ error: 'Tidak ada data kurir yang diupdate' });
+  }
+
+  sql += sets.join(', ') + ", updated_at = datetime('now', 'localtime') WHERE id = ?";
+  params.push(req.params.id);
+
+  run(sql, params);
+  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+  res.json(order);
+});
+
 router.put('/:id', (req, res) => {
   const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
   if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
@@ -105,7 +173,7 @@ router.put('/:id', (req, res) => {
   const pricePerUnit = (PRICES[service_type] || {}).price || 0;
   const unit = (PRICES[service_type] || {}).unit;
   const qty = unit === 'kg' ? (parseFloat(weight) || 0) : 1;
-  const total_price = qty * pricePerUnit + (pickup ? PICKUP_FEE : 0);
+  const total_price = qty * pricePerUnit + (pickup ? getPickupFee(latitude, longitude) : 0);
 
   run(
     `UPDATE orders SET customer_name = ?, phone = ?, address = ?, service_type = ?, weight = ?, pickup = ?, notes = ?, total_price = ?, pickup_date = ?, pickup_time = ?, latitude = ?, longitude = ?, payment_method = ?, updated_at = datetime('now', 'localtime') WHERE id = ?`,

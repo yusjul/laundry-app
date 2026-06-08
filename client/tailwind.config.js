@@ -8,6 +8,10 @@ export default {
         coral: '#e94560',
         midnight: '#0f3460',
         cream: '#f5f0eb',
+        'warm-ivory': '#F8F5F1',
+        'deep-navy': '#17172D',
+        'soft-coral': '#FF6B81',
+        'rose-pink': '#FF8FA3',
       },
       fontFamily: {
         display: ['Playfair Display', 'Georgia', 'serif'],

@@ -1,5 +1,5 @@
 import { Package, Weight, Calendar, Truck, FileText } from 'lucide-react';
-import { PRICES, PICKUP_FEE, SERVICE_TYPES, calculateSubtotal, calculateTotal } from '../../utils/prices';
+import { PRICES, SERVICE_TYPES, calculateSubtotal, calculateTotal, getPickupFee, getPickupDistance } from '../../utils/prices';
 
 export default function Step2Layanan({ form, onChange }) {
   const handleChange = (e) => {
@@ -8,7 +8,9 @@ export default function Step2Layanan({ form, onChange }) {
   };
 
   const subtotal = calculateSubtotal(form.service_type, form.weight);
-  const total = calculateTotal(form.service_type, form.weight, form.pickup);
+  const pickupFee = getPickupFee(form.latitude, form.longitude);
+  const total = calculateTotal(form.service_type, form.weight, form.pickup, form.latitude, form.longitude);
+  const distance = getPickupDistance(form.latitude, form.longitude);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -67,7 +69,10 @@ export default function Step2Layanan({ form, onChange }) {
         <label className="flex items-center gap-3 cursor-pointer group pt-2">
           <input type="checkbox" name="pickup" checked={form.pickup} onChange={(e) => onChange({ pickup: e.target.checked })} className="w-4 h-4 text-coral border-ink/20 rounded focus:ring-coral" />
           <span className="text-sm text-ink/70 group-hover:text-ink transition-colors flex items-center gap-2">
-            <Truck className="w-3.5 h-3.5" /> Antar Jemput (+Rp {PICKUP_FEE.toLocaleString()})
+            <Truck className="w-3.5 h-3.5" /> Antar Jemput
+            {form.latitude && form.longitude
+              ? ` (+Rp ${pickupFee.toLocaleString()} — ${distance.toFixed(1)} km)`
+              : ' (+Rp 5.000)'}
           </span>
         </label>
 
@@ -84,7 +89,9 @@ export default function Step2Layanan({ form, onChange }) {
           <p className="text-xs uppercase tracking-widest text-ink/40 mb-2">Estimasi Total</p>
           <p className="font-display text-3xl text-coral">Rp {total.toLocaleString()}</p>
           {form.pickup && subtotal > 0 && (
-            <p className="text-xs text-ink/40 mt-1">Termasuk biaya antar jemput Rp {PICKUP_FEE.toLocaleString()}</p>
+            <p className="text-xs text-ink/40 mt-1">
+              Termasuk biaya antar jemput Rp {pickupFee.toLocaleString()}{distance > 0 ? ` (${distance.toFixed(1)} km dari lokasi kami)` : ''}
+            </p>
           )}
         </div>
       )}

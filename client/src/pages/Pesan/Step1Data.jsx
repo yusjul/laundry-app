@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { MapPin, Crosshair, Navigation } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -15,7 +15,7 @@ const PHONE_REGEX = /^(08|\+62)\d{8,11}$/;
 export default function Step1Data({ form, onChange }) {
   const [locLoading, setLocLoading] = useState(false);
   const [locError, setLocError] = useState('');
-  const [mapReady, setMapReady] = useState(false);
+  const [pendingCoords, setPendingCoords] = useState(null);
   const mapRef = useRef(null);
   const markerRef = useRef(null);
   const mapInstance = useRef(null);
@@ -24,6 +24,7 @@ export default function Step1Data({ form, onChange }) {
 
   const initMap = useCallback((lat, lng) => {
     if (mapInstance.current) return;
+    if (!mapRef.current) return;
     const map = L.map(mapRef.current, { zoomControl: false }).setView([lat, lng], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
@@ -32,16 +33,27 @@ export default function Step1Data({ form, onChange }) {
     L.control.zoom({ position: 'topright' }).addTo(map);
 
     const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-    marker.on('dragend', () => {
+    marker.on('dragend', async () => {
       const pos = marker.getLatLng();
       onChange({ latitude: pos.lat, longitude: pos.lng });
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.lat}&lon=${pos.lng}&accept-language=id`);
+        const data = await res.json();
+        if (data.display_name) onChange({ address: data.display_name });
+      } catch {}
     });
 
     mapInstance.current = map;
     markerRef.current = marker;
     setTimeout(() => map.invalidateSize(), 200);
-    setMapReady(true);
   }, [onChange]);
+
+  useEffect(() => {
+    if (pendingCoords && mapRef.current) {
+      initMap(pendingCoords.lat, pendingCoords.lng);
+      setPendingCoords(null);
+    }
+  }, [pendingCoords, initMap]);
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -51,17 +63,23 @@ export default function Step1Data({ form, onChange }) {
     setLocLoading(true);
     setLocError('');
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         onChange({ latitude: lat, longitude: lng });
         setLocLoading(false);
-        if (!mapInstance.current) {
-          initMap(lat, lng);
-        } else {
+        if (mapInstance.current) {
           mapInstance.current.setView([lat, lng], 16);
           markerRef.current.setLatLng([lat, lng]);
+        } else {
+          setPendingCoords({ lat, lng });
         }
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=id`);
+          const data = await res.json();
+          const addr = data.display_name;
+          if (addr) onChange({ address: addr });
+        } catch {}
       },
       () => {
         setLocError('Gagal mendapatkan lokasi. Izinkan akses lokasi.');

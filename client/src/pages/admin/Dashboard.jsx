@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/orders')
-      .then((r) => r.json())
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    fetch('/api/orders', { signal: controller.signal })
+      .then((r) => { if (!r.ok) throw new Error('Gagal memuat data'); return r.json(); })
       .then((orders) => {
         const today = new Date().toISOString().split('T')[0];
         const todayOrders = orders.filter((o) => o.created_at?.startsWith(today));
@@ -14,14 +17,17 @@ export default function Dashboard() {
         const byStatus = {};
         orders.forEach((o) => { byStatus[o.status] = (byStatus[o.status] || 0) + 1; });
         setData({ todayOrders: todayOrders.length, revenue, byStatus, total: orders.length });
-      });
+      })
+      .catch((err) => setError(err.name === 'AbortError' ? 'Server tidak merespons' : err.message));
+    return () => { clearTimeout(timer); controller.abort(); };
   }, []);
 
+  if (error) return <p className="text-coral text-sm">{error}. <button onClick={() => window.location.reload()} className="underline">Muat ulang</button></p>;
   if (!data) return <p className="text-ink/50">Memuat...</p>;
 
   return (
     <div>
-      <h1 className="font-display text-3xl mb-8">Dashboard</h1>
+      <h1 className="font-display text-2xl md:text-3xl mb-6 md:mb-8">Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         {[

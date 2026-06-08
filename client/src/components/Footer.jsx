@@ -1,3 +1,5 @@
+import OperatingHours from './OperatingHours';
+
 export default function Footer() {
   return (
     <footer className="bg-ink text-white/60 py-16 mt-auto">
@@ -11,12 +13,20 @@ export default function Footer() {
           </div>
           <div>
             <p className="text-white font-medium uppercase text-xs tracking-widest mb-4">Kontak</p>
-            <p className="text-sm">0812-3456-7890</p>
-            <p className="text-sm">hello@laundryku.id</p>
+            <p>
+              <a href="tel:+6281234567890" className="text-sm hover:text-coral transition-colors">0812-3456-7890</a>
+            </p>
+            <p className="mt-1">
+              <a href="https://wa.me/6281234567890" target="_blank" rel="noopener noreferrer" className="text-sm hover:text-coral transition-colors">WhatsApp</a>
+            </p>
+            <p className="mt-1">
+              <a href="mailto:hello@laundryku.id" className="text-sm hover:text-coral transition-colors">hello@laundryku.id</a>
+            </p>
           </div>
           <div>
             <p className="text-white font-medium uppercase text-xs tracking-widest mb-4">Jam Operasional</p>
-            <p className="text-sm">Senin - Sabtu: 08.00 - 20.00</p>
+            <OperatingHours />
+            <p className="text-sm mt-2">Senin - Sabtu: 08.00 - 20.00</p>
             <p className="text-sm">Minggu: 09.00 - 17.00</p>
           </div>
         </div>
