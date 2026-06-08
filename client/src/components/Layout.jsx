@@ -1,10 +1,12 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import ConnectionStatus from './ConnectionStatus';
 
 export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-cream">
+      <ConnectionStatus />
       <Navbar />
       <main className="flex-1"><Outlet /></main>
       <Footer />
