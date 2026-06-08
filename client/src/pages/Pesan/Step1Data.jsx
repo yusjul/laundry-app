@@ -55,6 +55,34 @@ export default function Step1Data({ form, onChange }) {
     }
   }, [pendingCoords, initMap]);
 
+  useEffect(() => {
+    if (form.latitude && form.longitude) {
+      if (mapRef.current && !mapInstance.current) {
+        initMap(form.latitude, form.longitude);
+      }
+      if (!form.address && !locLoading) {
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${form.latitude}&lon=${form.longitude}&accept-language=id`)
+          .then(r => r.json())
+          .then(data => { if (data.display_name) onChange({ address: data.display_name }); })
+          .catch(() => {});
+      }
+    }
+  }, [form.latitude, form.longitude]);
+
+  useEffect(() => {
+    if (!form.latitude && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          onChange({ latitude: lat, longitude: lng });
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+    }
+  }, []);
+
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
       setLocError('Geolocation tidak didukung browser ini');

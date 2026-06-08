@@ -43,6 +43,26 @@ export default function PesanCucian({ user }) {
       .catch(err => console.error('Gagal mengambil daftar harga:', err));
   }, [position]);
 
+  // Auto-detect location on mount
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setPosition([pos.coords.latitude, pos.coords.longitude]);
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
+  }, []);
+
+  // Reverse geocoding on position change (map click / auto-detect)
+  useEffect(() => {
+    if (position[0] === -6.2088 && position[1] === 106.8456) return;
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position[0]}&lon=${position[1]}&accept-language=id`)
+      .then(r => r.json())
+      .then(data => { if (data.display_name) setAddress(data.display_name); })
+      .catch(() => {});
+  }, [position[0], position[1]]);
+
   // Handle pre-selected service from CekTarif
   useEffect(() => {
     const checkPreselected = () => {
