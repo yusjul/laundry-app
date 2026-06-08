@@ -22,8 +22,13 @@ if (fs.existsSync(envPath)) {
   }
 }
 
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) {
+  console.error('[DB] DATABASE_URL not set');
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: dbUrl,
   ssl: process.env.VERCEL ? { rejectUnauthorized: false } : false,
 });
 
