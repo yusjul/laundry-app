@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Pencil, Trash2 } from 'lucide-react';
 
 const statusLabels = {
   pending: 'Menunggu', diambil: 'Diambil', dicuci: 'Dicuci',
@@ -9,11 +10,20 @@ const statusLabels = {
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const url = filter ? `/api/orders?status=${filter}` : '/api/orders';
     fetch(url).then((r) => r.json()).then(setOrders);
   }, [filter]);
+
+  const handleDelete = async (id, orderNo) => {
+    if (!window.confirm(`Yakin hapus order ${orderNo}?`)) return;
+    const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      setOrders((prev) => prev.filter((o) => o.id !== id));
+    }
+  };
 
   return (
     <div>
@@ -43,6 +53,7 @@ export default function Orders() {
               <th className="text-left px-4 py-4 text-xs uppercase tracking-widest text-ink/40 font-medium">Total</th>
               <th className="text-left px-4 py-4 text-xs uppercase tracking-widest text-ink/40 font-medium">Status</th>
               <th className="text-left px-4 py-4 text-xs uppercase tracking-widest text-ink/40 font-medium">Tanggal</th>
+              <th className="text-left px-4 py-4 text-xs uppercase tracking-widest text-ink/40 font-medium">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-ink/5">
@@ -58,6 +69,16 @@ export default function Orders() {
                   <span className="text-xs uppercase tracking-wider text-ink/50 bg-ink/5 px-3 py-1">{statusLabels[o.status]}</span>
                 </td>
                 <td className="px-4 py-4 text-ink/40 text-xs">{o.created_at}</td>
+                <td className="px-4 py-4">
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => navigate(`/admin/orders/${o.id}`)} className="p-1.5 text-ink/40 hover:text-ink transition-colors" title="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(o.id, o.order_no)} className="p-1.5 text-ink/40 hover:text-coral transition-colors" title="Hapus">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

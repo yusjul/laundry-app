@@ -98,6 +98,37 @@ router.patch('/:id/status', (req, res) => {
   res.json(order);
 });
 
+router.put('/:id', (req, res) => {
+  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+
+  const { customer_name, phone, address, service_type, weight, pickup, notes } = req.body;
+  if (!customer_name || !phone || !service_type) {
+    return res.status(400).json({ error: 'Nama, no HP, dan jenis layanan wajib diisi' });
+  }
+
+  const prices = { 'Cuci Kering': 7000, 'Cuci Setrika': 10000, 'Dry Clean': 15000, 'Bed Cover': 25000 };
+  const pricePerUnit = prices[service_type] || 0;
+  const qty = service_type === 'Cuci Kering' || service_type === 'Cuci Setrika' ? (weight || 1) : 1;
+  const total_price = qty * pricePerUnit + (pickup ? 5000 : 0);
+
+  run(
+    `UPDATE orders SET customer_name = ?, phone = ?, address = ?, service_type = ?, weight = ?, pickup = ?, notes = ?, total_price = ?, updated_at = datetime('now', 'localtime') WHERE id = ?`,
+    [customer_name, phone, address || '', service_type, weight || 0, pickup ? 1 : 0, notes || '', total_price, req.params.id]
+  );
+
+  const updated = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+  res.json(updated);
+});
+
+router.delete('/:id', (req, res) => {
+  const order = queryOne('SELECT * FROM orders WHERE id = ?', [req.params.id]);
+  if (!order) return res.status(404).json({ error: 'Order tidak ditemukan' });
+
+  run('DELETE FROM orders WHERE id = ?', [req.params.id]);
+  res.json({ message: 'Order berhasil dihapus' });
+});
+
 router.get('/report/summary', (req, res) => {
   const today = queryOne(`
     SELECT COUNT(*) as total_orders, COALESCE(SUM(total_price), 0) as total_revenue

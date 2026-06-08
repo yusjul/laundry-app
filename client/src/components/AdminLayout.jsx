@@ -1,9 +1,10 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { LayoutDashboard, ClipboardList, BarChart3 } from 'lucide-react';
 
 const sidebarLinks = [
-  { to: '/admin', label: 'Dashboard', icon: '01' },
-  { to: '/admin/orders', label: 'Orders', icon: '02' },
-  { to: '/admin/laporan', label: 'Laporan', icon: '03' },
+  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/admin/orders', label: 'Orders', icon: ClipboardList },
+  { to: '/admin/laporan', label: 'Laporan', icon: BarChart3 },
 ];
 
 export default function AdminLayout() {
@@ -17,6 +18,7 @@ export default function AdminLayout() {
         </Link>
         <nav className="space-y-1">
           {sidebarLinks.map((link) => {
+            const Icon = link.icon;
             const active = location.pathname === link.to;
             return (
               <Link
@@ -26,7 +28,7 @@ export default function AdminLayout() {
                   active ? 'bg-ink text-white' : 'text-ink/60 hover:text-ink hover:bg-ink/5'
                 }`}
               >
-                <span className="font-display text-xs opacity-50">{link.icon}</span>
+                <Icon className="w-4 h-4" />
                 {link.label}
               </Link>
             );
