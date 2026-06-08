@@ -456,6 +456,18 @@ export default function DesktopLandingPage() {
   const [galleryMousePos, setGalleryMousePos] = useState({ x: 0, y: 0 });
   const [isGalleryHovered, setIsGalleryHovered] = useState(false);
 
+  const [globalMousePos, setGlobalMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      const x = (e.clientX / window.innerWidth) - 0.5;
+      const y = (e.clientY / window.innerHeight) - 0.5;
+      setGlobalMousePos({ x, y });
+    };
+    window.addEventListener('mousemove', handleGlobalMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  }, []);
+
   const mouseFrameId = useRef(null);
 
   // Track mouse coordinates over the hero wrapper with requestAnimationFrame throttling
@@ -652,20 +664,24 @@ export default function DesktopLandingPage() {
               top: '-10%', left: '-5%',
               width: '65vw', height: '65vw',
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(255,200,195,0.22) 0%, rgba(255,200,195,0.06) 45%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(255,195,190,0.35) 0%, rgba(255,195,190,0.12) 45%, transparent 70%)',
               filter: 'blur(60px)',
+              transform: `translate3d(${globalMousePos.x * 20}px, ${globalMousePos.y * 20}px, 0)`,
+              transition: 'transform 0.2s ease-out'
             }}
           />
-          {/* Secondary navy whisper — bottom-right */}
+          {/* Secondary peach bloom — bottom-right */}
           <div
             className="absolute animate-light-shift"
             style={{
               bottom: '-15%', right: '-8%',
               width: '55vw', height: '55vw',
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(23,23,45,0.07) 0%, transparent 65%)',
+              background: 'radial-gradient(circle, rgba(255,209,202,0.25) 0%, transparent 65%)',
               filter: 'blur(80px)',
               animationDelay: '15s',
+              transform: `translate3d(${globalMousePos.x * -15}px, ${globalMousePos.y * -15}px, 0)`,
+              transition: 'transform 0.2s ease-out'
             }}
           />
           {/* Center warm ivory bloom */}
@@ -675,8 +691,10 @@ export default function DesktopLandingPage() {
               top: '25%', left: '30%',
               width: '40vw', height: '40vw',
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(255,248,242,0.35) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(255,248,242,0.45) 0%, transparent 70%)',
               filter: 'blur(100px)',
+              transform: `translate3d(${globalMousePos.x * 10}px, ${globalMousePos.y * 10}px, 0)`,
+              transition: 'transform 0.2s ease-out'
             }}
           />
           {/* Volumetric diagonal light ray 1 */}
@@ -685,11 +703,12 @@ export default function DesktopLandingPage() {
             style={{
               top: 0, right: '22%',
               width: '2px', height: '45vh',
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0.18), transparent)',
-              transform: 'rotate(18deg)',
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.22), transparent)',
+              transform: `rotate(18deg) translate3d(${globalMousePos.x * 12}px, ${globalMousePos.y * 8}px, 0)`,
               transformOrigin: 'top center',
               filter: 'blur(3px)',
               opacity: 0.6,
+              transition: 'transform 0.25s ease-out'
             }}
           />
           {/* Volumetric diagonal light ray 2 */}
@@ -698,8 +717,8 @@ export default function DesktopLandingPage() {
             style={{
               top: 0, right: '28%',
               width: '1px', height: '38vh',
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0.12), transparent)',
-              transform: 'rotate(14deg)',
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.15), transparent)',
+              transform: `rotate(14deg) translate3d(${globalMousePos.x * 8}px, ${globalMousePos.y * 6}px, 0)`,
               transformOrigin: 'top center',
               filter: 'blur(2px)',
               opacity: 0.5,
@@ -1404,6 +1423,29 @@ export default function DesktopLandingPage() {
           >
             <path d="M180 0 C80 50 180 150 80 200 C-20 250 80 350 180 400" stroke="#C4998A" strokeWidth="55" strokeLinecap="round" fill="none" />
           </svg>
+          
+          {/* 3D Parallax Bokeh: Clothes Rack / Hanging Clothes on the left */}
+          <div
+            className="absolute left-[3%] top-[25%] w-36 h-44 pointer-events-none filter blur-[5px] opacity-35"
+            style={{
+              transform: `translate3d(${globalMousePos.x * -25}px, ${globalMousePos.y * -25 - (scrollY - 600) * 0.04}px, 0) rotate(${-6 + globalMousePos.x * -4}deg)`,
+              transition: 'transform 0.15s ease-out'
+            }}
+          >
+            <FloatingClothes3D color="#FCDAD7" blur={false} />
+          </div>
+
+          {/* 3D Parallax Bokeh: Washing Machine on the right */}
+          <div
+            className="absolute right-[2%] top-[30%] w-48 h-56 pointer-events-none filter blur-[6px] opacity-30"
+            style={{
+              transform: `translate3d(${globalMousePos.x * 20}px, ${globalMousePos.y * 20 - (scrollY - 600) * 0.03}px, 0) rotate(${14 + globalMousePos.x * 5}deg)`,
+              transition: 'transform 0.15s ease-out'
+            }}
+          >
+            <WashingMachine3D />
+          </div>
+
           {/* Textile geometry — subtle diamond form, right side */}
           <svg
             className="absolute right-0 bottom-1/3 animate-fabric-sway-medium"
@@ -1412,18 +1454,20 @@ export default function DesktopLandingPage() {
           >
             <path d="M200 0 C120 40 200 120 100 160 C0 200 80 280 200 300" stroke="#DBBDBD" strokeWidth="50" strokeLinecap="round" fill="none" />
           </svg>
-          {/* Icon silhouette — laundry tag, top right, barely visible */}
-          <svg
-            className="absolute right-[8%] top-[10%] animate-float-slow"
-            style={{ width: '48px', opacity: 0.06 }}
-            viewBox="0 0 100 140" fill="none" stroke="#8B7B8B" strokeWidth="6"
+          
+          {/* 3D Parallax Bokeh: Floating Hanger silhouette */}
+          <div
+            className="absolute right-[15%] top-[12%] w-16 h-16 pointer-events-none filter blur-[3px] opacity-25 animate-float-slow"
+            style={{
+              transform: `translate3d(${globalMousePos.x * -12}px, ${globalMousePos.y * -12 - (scrollY - 600) * 0.05}px, 0) rotate(${globalMousePos.x * 10}deg)`,
+              transition: 'transform 0.2s ease-out'
+            }}
           >
-            <rect x="15" y="10" width="70" height="120" rx="10" />
-            <circle cx="50" cy="28" r="8" />
-            <line x1="28" y1="60" x2="72" y2="60" />
-            <line x1="28" y1="80" x2="72" y2="80" />
-            <line x1="28" y1="100" x2="55" y2="100" />
-          </svg>
+            <svg viewBox="0 0 100 100" fill="none" stroke="#8B7B8B" strokeWidth="3" strokeLinecap="round">
+              <path d="M50,30 C50,20 56,15 50,10 C44,5 38,15 38,22" />
+              <path d="M15,50 L50,30 L85,50 Z" />
+            </svg>
+          </div>
         </div>
 
         <div className="text-center max-w-2xl mx-auto mb-20 space-y-4">
@@ -1482,6 +1526,28 @@ export default function DesktopLandingPage() {
               animationDelay:s.delay, animationDuration:'5s'
             }}/>
           ))}
+          {/* 3D Parallax Bokeh: Towels Basket on the left */}
+          <div
+            className="absolute left-[2%] bottom-[20%] w-48 h-40 pointer-events-none filter blur-[6px] opacity-25"
+            style={{
+              transform: `translate3d(${globalMousePos.x * -20}px, ${globalMousePos.y * -20 - (scrollY - 1400) * 0.03}px, 0) rotate(${-8 + globalMousePos.x * 6}deg)`,
+              transition: 'transform 0.15s ease-out'
+            }}
+          >
+            <TowelsBasket3D />
+          </div>
+
+          {/* 3D Parallax Bokeh: Clothes Rack / Hanging Clothes on the right */}
+          <div
+            className="absolute right-[4%] top-[10%] w-36 h-44 pointer-events-none filter blur-[5px] opacity-30 animate-float-medium"
+            style={{
+              transform: `translate3d(${globalMousePos.x * 25}px, ${globalMousePos.y * 25 - (scrollY - 1400) * 0.04}px, 0) rotate(${5 + globalMousePos.x * -4}deg)`,
+              transition: 'transform 0.15s ease-out'
+            }}
+          >
+            <FloatingClothes3D color="#FFF" blur={false} />
+          </div>
+
           {/* Hanging garment silhouettes — far background, heavy blur */}
           <svg
             className="absolute top-[8%] left-[4%] animate-float-slow"
@@ -1611,6 +1677,39 @@ export default function DesktopLandingPage() {
               boxShadow:'0 0 8px rgba(255,143,163,0.2)'
             }}/>
           ))}
+
+          {/* 3D Parallax Bokeh: Delivery Van on the left */}
+          <div
+            className="absolute left-[5%] bottom-[12%] w-[120px] h-[80px] pointer-events-none filter blur-[5px] opacity-30"
+            style={{
+              transform: `translate3d(${globalMousePos.x * -30}px, ${globalMousePos.y * -30 - (scrollY - 2000) * 0.04}px, 0) rotate(${-3 + globalMousePos.x * -5}deg) scale(0.8)`,
+              transition: 'transform 0.15s ease-out'
+            }}
+          >
+            <DeliveryVan3D />
+          </div>
+
+          {/* 3D Parallax Bokeh: Location Pin in the middle background */}
+          <div
+            className="absolute left-[42%] top-[12%] w-12 h-16 pointer-events-none filter blur-[4px] opacity-35 animate-float-slow"
+            style={{
+              transform: `translate3d(${globalMousePos.x * 15}px, ${globalMousePos.y * 15 - (scrollY - 2000) * 0.03}px, 0) rotate(${globalMousePos.x * 8}deg)`,
+              transition: 'transform 0.15s ease-out'
+            }}
+          >
+            <LocationPin3D />
+          </div>
+
+          {/* 3D Parallax Bokeh: QR Cube on the right */}
+          <div
+            className="absolute right-[8%] top-[25%] w-16 h-16 pointer-events-none filter blur-[5px] opacity-25"
+            style={{
+              transform: `translate3d(${globalMousePos.x * 25}px, ${globalMousePos.y * 25 - (scrollY - 2000) * 0.05}px, 0) rotateY(${20 + globalMousePos.x * 15}deg) rotateX(${15 + globalMousePos.y * 10}deg)`,
+              transition: 'transform 0.1s ease-out'
+            }}
+          >
+            <QRCodeCube3D />
+          </div>
         </div>
         {/* Subtle section-specific accent (lighter than before — GlobalBG already handles atmosphere) */}
         <div
@@ -1996,6 +2095,29 @@ export default function DesktopLandingPage() {
         <div className="lku-section-overlay">
           {/* Very soft pink ambient glow — top center */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] rounded-full bg-soft-coral/5 blur-[80px]" />
+          
+          {/* Subtle 3D Parallax Bokeh in Footer: Washing Machine on the left */}
+          <div
+            className="absolute left-[8%] bottom-[10%] w-[110px] h-[135px] pointer-events-none filter blur-[6px] opacity-15 hidden lg:block"
+            style={{
+              transform: `translate3d(${globalMousePos.x * -10}px, ${globalMousePos.y * -10}px, 0) rotate(-15deg)`,
+              transition: 'transform 0.2s ease-out'
+            }}
+          >
+            <WashingMachine3D />
+          </div>
+
+          {/* Subtle 3D Parallax Bokeh in Footer: Towels Basket on the right */}
+          <div
+            className="absolute right-[8%] bottom-[12%] w-[120px] h-[100px] pointer-events-none filter blur-[5px] opacity-15 hidden lg:block"
+            style={{
+              transform: `translate3d(${globalMousePos.x * 10}px, ${globalMousePos.y * 10}px, 0) rotate(10deg)`,
+              transition: 'transform 0.2s ease-out'
+            }}
+          >
+            <TowelsBasket3D />
+          </div>
+
           {/* Minimal fabric texture — bottom corners */}
           <svg
             className="absolute bottom-0 left-0 animate-fabric-sway-slow"
@@ -2024,7 +2146,7 @@ export default function DesktopLandingPage() {
         {/* Top fade — transitions section above into footer */}
         <div
           className="absolute top-0 left-0 right-0 h-24 pointer-events-none"
-          style={{ background:'linear-gradient(to bottom, rgba(253,250,247,0) 0%, rgba(253,250,247,0.4) 100%)' }}
+          style={{ background:'linear-gradient(to bottom, rgba(255,233,230,0) 0%, rgba(255,233,230,0.5) 100%)' }}
         />
         {/* Footer content */}
         <div className="relative z-10 max-w-6xl mx-auto px-8 space-y-5">
